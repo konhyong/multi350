@@ -1,12 +1,13 @@
 #ifndef PROJCONTROL_GUI_HPP
 #define PROJCONTROL_GUI_HPP
 
-#include "al/ui/al_ParameterGUI.hpp"
-#include "al/ui/al_PresetHandler.hpp"
-#include "multi350/controller.hpp"
 #include <array>
 #include <string>
 #include <vector>
+
+#include "al/ui/al_ParameterGUI.hpp"
+#include "al/ui/al_PresetHandler.hpp"
+#include "multi350/controller.hpp"
 
 using namespace al;
 
@@ -70,7 +71,8 @@ struct Multi350GUI {
   PresetHandler preset_currents{"presets/currents"};
   PresetHandler preset_projectors{"presets/projectors"};
 
-  void init() {
+  bool init()
+  {
     preset_currents << proj0_red << proj0_green << proj0_blue << proj1_red
                     << proj1_green << proj1_blue << proj2_red << proj2_green
                     << proj2_blue << proj3_red << proj3_green << proj3_blue;
@@ -80,19 +82,26 @@ struct Multi350GUI {
                       << proj3_index;
     preset_projectors.recallPresetSynchronous("projectors");
 
-    multi350.init();
+    if (!multi350.init()) {
+      std::cerr << "Failed to initialize projector GUI" << std::endl;
+      return false;
+    }
 
     setupProjectorIndices();
     setupPatternSequences();
     setupCallbacks();
+
+    return true;
   }
 
-  void shutdown() {
+  void shutdown()
+  {
     multi350.close();
     multi350.exit();
   }
 
-  void configureGUI() {
+  void configureGUI()
+  {
     ImGui::Begin("MULTI350 Control");
 
     ParameterGUI::draw(&device_list);
@@ -142,7 +151,8 @@ struct Multi350GUI {
     if (multi350.isConnected()) {
       ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Connected: %u",
                          multi350.deviceNum());
-    } else {
+    }
+    else {
       ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Not Connected");
     }
 
@@ -155,16 +165,20 @@ struct Multi350GUI {
           proj1_control.setHint("hide", true);
           if (device_num < 1) {
             proj0_control.setHint("hide", true);
-          } else {
+          }
+          else {
             proj0_control.setHint("hide", false);
           }
-        } else {
+        }
+        else {
           proj1_control.setHint("hide", false);
         }
-      } else {
+      }
+      else {
         proj2_control.setHint("hide", false);
       }
-    } else {
+    }
+    else {
       proj3_control.setHint("hide", false);
       proj2_control.setHint("hide", false);
       proj1_control.setHint("hide", false);
@@ -244,7 +258,8 @@ struct Multi350GUI {
     ImGui::End();
   }
 
-  void setupCallbacks() {
+  void setupCallbacks()
+  {
     device_list.registerChangeCallback(
         [&](float value) { multi350.printDevices(); });
 
@@ -303,22 +318,22 @@ struct Multi350GUI {
     device_close.registerChangeCallback([&](float value) { multi350.close(); });
 
     proj0_control.registerChangeCallback([&](float value) {
-      auto &projector = multi350.getProjector(0);
+      auto& projector = multi350.getProjector(0);
       projector.controlled = value;
     });
 
     proj1_control.registerChangeCallback([&](float value) {
-      auto &projector = multi350.getProjector(1);
+      auto& projector = multi350.getProjector(1);
       projector.controlled = value;
     });
 
     proj2_control.registerChangeCallback([&](float value) {
-      auto &projector = multi350.getProjector(2);
+      auto& projector = multi350.getProjector(2);
       projector.controlled = value;
     });
 
     proj3_control.registerChangeCallback([&](float value) {
-      auto &projector = multi350.getProjector(3);
+      auto& projector = multi350.getProjector(3);
       projector.controlled = value;
     });
 
@@ -337,7 +352,8 @@ struct Multi350GUI {
         [&](float value) { preset_projectors.storePreset("projectors"); });
   }
 
-  void setupPatternSequences() {
+  void setupPatternSequences()
+  {
     using namespace multi350;
     // TODO: check if insert black is needed on final pattern
     patternSequences[0].addPattern<Pattern::Pattern8bit>(
@@ -401,7 +417,8 @@ struct Multi350GUI {
         true, false);
   }
 
-  void setupProjectorIndices() {
+  void setupProjectorIndices()
+  {
     // // TODO: adjust for less than 4 projectors
     // if (multi350.deviceNum() != 4) {
     //   std::cout << "[Controller] Only " << multi350.deviceNum()
