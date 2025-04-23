@@ -1,6 +1,5 @@
-#ifndef PROJCONTROL_GUI_HPP
-#define PROJCONTROL_GUI_HPP
-
+#pragma once
+// SPDX-License-Identifier: BSD-3-Clause
 #include <array>
 #include <string>
 #include <vector>
@@ -11,6 +10,7 @@
 
 using namespace al;
 
+/// @brief GUI for multi350 using allolib
 struct Multi350GUI {
   multi350::Controller multi350;
 
@@ -440,5 +440,3 @@ struct Multi350GUI {
     // multi350.updateIndices(usb_idx);
   }
 };
-
-#endif

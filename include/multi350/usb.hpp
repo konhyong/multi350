@@ -1,10 +1,10 @@
-#ifndef MULTI350_USB_HPP
-#define MULTI350_USB_HPP
-
-#include "hidapi.h"
+#pragma once
+// SPDX-License-Identifier: BSD-3-Clause
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+#include "hidapi.h"
 
 namespace multi350 {
 namespace USB {
@@ -12,19 +12,19 @@ namespace USB {
 using Buffer = std::unique_ptr<uint8_t, std::default_delete<uint8_t[]>>;
 
 /// @brief Vendor ID for DLPC350
-const uint16_t vendorId = 0x0451;
+constexpr uint16_t vendorId = 0x0451;
 
 /// @brief Product ID for DLPC350
-const uint16_t productId = 0x6401;
+constexpr uint16_t productId = 0x6401;
 
 /// @brief Current HID device used for transactions
-extern hid_device *device;
+extern hid_device* device;
 
 /// @brief All DLPC350 devices connected via HID
-extern std::vector<hid_device *> devices;
+extern std::vector<hid_device*> devices;
 
 /// @brief Timeout duration for hid read in milliseconds
-const int32_t readTimeout = 2000;
+constexpr int32_t readTimeout = 2000;
 
 /// @brief Maximum packet size in bytes for a single command
 constexpr size_t packetSize = 64;
@@ -71,8 +71,6 @@ extern Buffer read();
 /// @brief Write to the USB connection
 /// @param data Data buffer to write
 /// @return Number of bytes written
-extern int32_t write(Buffer &data);
-}; // namespace USB
-}; // namespace multi350
-
-#endif
+extern int32_t write(Buffer& data);
+};  // namespace USB
+};  // namespace multi350

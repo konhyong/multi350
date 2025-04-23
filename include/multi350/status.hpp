@@ -1,6 +1,5 @@
-#ifndef MULTI350_STATUS_HPP
-#define MULTI350_STATUS_HPP
-
+#pragma once
+// SPDX-License-Identifier: BSD-3-Clause
 #include <string>
 #include <vector>
 
@@ -12,19 +11,17 @@ extern std::vector<std::string> DRCError;
 extern std::vector<std::string> forcedSwap;
 extern std::vector<std::string> sequenceAbort;
 extern std::vector<std::string> sequenceError;
-}; // namespace hardware
+};  // namespace hardware
 
 namespace system {
 extern std::vector<std::string> memoryTest;
-}; // namespace system
+};  // namespace system
 
 namespace main {
 extern std::vector<std::string> DMDParked;
 extern std::vector<std::string> sequenceRunning;
 extern std::vector<std::string> bufferFrozen;
 extern std::vector<std::string> gammaCorrection;
-}; // namespace main
-}; // namespace status
-}; // namespace multi350
-
-#endif
+};  // namespace main
+};  // namespace status
+};  // namespace multi350

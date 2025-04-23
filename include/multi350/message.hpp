@@ -1,26 +1,27 @@
-#ifndef MULTI350_MESSAGE_HPP
-#define MULTI350_MESSAGE_HPP
-
-#include "usb.hpp"
+#pragma once
+// SPDX-License-Identifier: BSD-3-Clause
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <utility>
+
+#include "usb.hpp"
 
 namespace multi350 {
 
 namespace internal {
 constexpr size_t maxMessageDataSize = 512;
 constexpr bool verbose = false;
-}; // namespace internal
+};  // namespace internal
 
 struct Message {
   enum class Type : bool { WRITE = 0, READ = 1 };
   Message() : flags{0, 0, 0, 1, Type::WRITE}, sequence{0}, length{0}, data{0} {}
 
   template <typename... ParamList>
-  Message(Type _type, uint16_t cmd, ParamList &&...params)
-      : flags{0, 0, 0, 1, _type}, sequence{0}, length{2}, data{0} {
+  Message(Type _type, uint16_t cmd, ParamList&&... params)
+      : flags{0, 0, 0, 1, _type}, sequence{0}, length{2}, data{0}
+  {
     command = cmd;
     if (sizeof...(params) > 0) {
       addData(std::forward<ParamList>(params)...);
@@ -29,14 +30,17 @@ struct Message {
 
   inline void addData() {}
 
-  template <typename T> inline void addData(T first) {
-    T *ptr = reinterpret_cast<T *>(&data[length]);
+  template <typename T>
+  inline void addData(T first)
+  {
+    T* ptr = reinterpret_cast<T*>(&data[length]);
     *ptr = first;
     length += sizeof(first);
   }
 
   template <typename T, typename... ParamList>
-  inline void addData(T first, ParamList &&...params) {
+  inline void addData(T first, ParamList&&... params)
+  {
     addData(first);
     if (sizeof...(params) > 0) {
       addData(std::forward<ParamList>(params)...);
@@ -45,10 +49,10 @@ struct Message {
 
   struct {
     uint8_t destination : 3;
-    uint8_t reserved : 2;
-    bool error : 1;
-    bool reply : 1;
-    Type rw : 1;
+    uint8_t reserved    : 2;
+    bool error          : 1;
+    bool reply          : 1;
+    Type rw             : 1;
   } flags;
 
   uint8_t sequence;
@@ -60,7 +64,8 @@ struct Message {
   };
 };
 
-extern inline std::unique_ptr<Message> read() {
+extern inline std::unique_ptr<Message> read()
+{
   auto received = USB::read();
 
   if (received == nullptr) {
@@ -75,7 +80,8 @@ extern inline std::unique_ptr<Message> read() {
   return ret;
 }
 
-extern inline int32_t write(Message &msg) {
+extern inline int32_t write(Message& msg)
+{
   uint16_t headerBytes =
       sizeof(msg.flags) + sizeof(msg.sequence) + sizeof(msg.length);
   uint16_t maxDataSize = USB::packetSize - headerBytes;
@@ -112,7 +118,9 @@ extern inline int32_t write(Message &msg) {
 template <typename T>
 using MessageData = std::unique_ptr<T, std::default_delete<T[]>>;
 
-template <typename T = uint8_t> extern MessageData<T> transact(Message &msg) {
+template <typename T = uint8_t>
+extern MessageData<T> transact(Message& msg)
+{
   int32_t result = write(msg);
 
   if (internal::verbose) {
@@ -163,27 +171,28 @@ template <typename T = uint8_t> extern MessageData<T> transact(Message &msg) {
 }
 
 template <typename T = uint8_t>
-extern inline MessageData<T> sendGetMessage(uint16_t cmd) {
+extern inline MessageData<T> sendGetMessage(uint16_t cmd)
+{
   auto send = Message(Message::Type::READ, cmd);
   return transact<T>(send);
 }
 
 template <typename... ParamList>
 extern inline MessageData<uint8_t> sendSetMessage(uint16_t cmd,
-                                                  ParamList &&...params) {
+                                                  ParamList&&... params)
+{
   auto send =
       Message(Message::Type::WRITE, cmd, std::forward<ParamList>(params)...);
   return transact<uint8_t>(send);
 }
 
 template <typename... ParamList>
-extern inline int32_t sendNoAckMessage(uint16_t cmd, ParamList &&...params) {
+extern inline int32_t sendNoAckMessage(uint16_t cmd, ParamList&&... params)
+{
   auto send =
       Message(Message::Type::WRITE, cmd, std::forward<ParamList>(params)...);
   send.flags.reply = false;
 
   return write(send);
 }
-}; // namespace multi350
-
-#endif
+};  // namespace multi350

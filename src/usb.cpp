@@ -1,21 +1,23 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "multi350/usb.hpp"
+
 #include <iostream>
 
 namespace multi350 {
 namespace USB {
 
-hid_device *device = nullptr;
-std::vector<hid_device *> devices;
+hid_device* device = nullptr;
+std::vector<hid_device*> devices;
 
 inline bool init() { return (hid_init() == 0); }
 
 inline bool exit() { return (hid_exit() == 0); }
 
-inline bool open() {
-  if (!devices.empty())
-    close();
+inline bool open()
+{
+  if (!devices.empty()) close();
 
-  hid_device_info *hid_info;
+  hid_device_info* hid_info;
   hid_info = hid_enumerate(vendorId, productId);
   if (!hid_info) {
     return false;
@@ -35,14 +37,15 @@ inline bool open() {
       devices.push_back(device);
     }
     hid_info = hid_info->next;
-    device = nullptr; // reset to default
+    device = nullptr;  // reset to default
   }
 
   return true;
 }
 
-inline void close() {
-  for (auto *handle : devices) {
+inline void close()
+{
+  for (auto* handle : devices) {
     hid_close(handle);
   }
   devices.clear();
@@ -53,7 +56,8 @@ inline bool isConnected() { return !devices.empty(); }
 
 inline unsigned int deviceNum() { return devices.size(); }
 
-inline bool select(unsigned int index) {
+inline bool select(unsigned int index)
+{
   if (index >= devices.size()) {
     std::cerr << "Unable to select device " << index << std::endl;
     return false;
@@ -63,8 +67,9 @@ inline bool select(unsigned int index) {
   return true;
 }
 
-inline void printDevices() {
-  struct hid_device_info *hid_info;
+inline void printDevices()
+{
+  struct hid_device_info* hid_info;
   hid_info = hid_enumerate(vendorId, productId);
   std::cout << "[Device List]" << std::endl;
   while (hid_info) {
@@ -79,9 +84,9 @@ inline void printDevices() {
   }
 }
 
-inline Buffer read() {
-  if (!isConnected())
-    return nullptr;
+inline Buffer read()
+{
+  if (!isConnected()) return nullptr;
 
   if (!device) {
     std::cerr << "Device not selected" << std::endl;
@@ -101,9 +106,9 @@ inline Buffer read() {
   return ret;
 }
 
-inline int32_t write(Buffer &data) {
-  if (!isConnected())
-    return -1;
+inline int32_t write(Buffer& data)
+{
+  if (!isConnected()) return -1;
 
   if (!device) {
     std::cerr << "Device not selected" << std::endl;
@@ -120,5 +125,5 @@ inline int32_t write(Buffer &data) {
 
   return writtenBytes;
 }
-}; // namespace USB
-}; // namespace multi350
+};  // namespace USB
+};  // namespace multi350

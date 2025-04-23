@@ -1,4 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "multi350/dlpc350.hpp"
+
 #include "multi350/message.hpp"
 
 namespace multi350 {
@@ -6,7 +8,8 @@ namespace multi350 {
  * getHardwareStatus
  * CMD2 : 0x1A, CMD3 : 0x0A
  */
-std::unique_ptr<HardwareStatus> getHardwareStatus() {
+std::unique_ptr<HardwareStatus> getHardwareStatus()
+{
   auto result = sendGetMessage<HardwareStatus>(0x1A0A);
   return std::make_unique<HardwareStatus>(*result.get());
 }
@@ -15,7 +18,8 @@ std::unique_ptr<HardwareStatus> getHardwareStatus() {
  * getSystemStatus
  * CMD2 : 0x1A, CMD3 : 0x0B
  */
-std::unique_ptr<SystemStatus> getSystemStatus() {
+std::unique_ptr<SystemStatus> getSystemStatus()
+{
   auto result = sendGetMessage<SystemStatus>(0x1A0B);
   return std::make_unique<SystemStatus>(*result.get());
 }
@@ -24,7 +28,8 @@ std::unique_ptr<SystemStatus> getSystemStatus() {
  * getMainStatus
  * CMD2 : 0x1A, CMD3 : 0x0C
  */
-std::unique_ptr<MainStatus> getMainStatus() {
+std::unique_ptr<MainStatus> getMainStatus()
+{
   auto result = sendGetMessage<MainStatus>(0x1A0C);
   return std::make_unique<MainStatus>(*result.get());
 }
@@ -33,7 +38,8 @@ std::unique_ptr<MainStatus> getMainStatus() {
  * getVersion
  * CMD2 : 0x02, CMD3 : 0x05
  */
-std::unique_ptr<Version> getVersion() {
+std::unique_ptr<Version> getVersion()
+{
   auto result = sendGetMessage<uint32_t>(0x0205);
   return std::make_unique<Version>(*(result.get()), *(result.get() + 1),
                                    *(result.get() + 2), *(result.get() + 3));
@@ -43,7 +49,8 @@ std::unique_ptr<Version> getVersion() {
  * getFirmwareTag
  * CMD2 : 0x1A, CMD3 : 0xFF
  */
-std::unique_ptr<std::string> getFirmwareTag() {
+std::unique_ptr<std::string> getFirmwareTag()
+{
   auto result = sendGetMessage<char>(0x1AFF);
   return std::make_unique<std::string>(result.get());
 }
@@ -52,7 +59,8 @@ std::unique_ptr<std::string> getFirmwareTag() {
  * softwareReset
  * CMD2 : 0x08, CMD3 : 0x02
  */
-bool softwareReset() {
+bool softwareReset()
+{
   auto result = sendNoAckMessage(0x0802);
   return (result > 0);
 }
@@ -61,7 +69,8 @@ bool softwareReset() {
  * getPowerMode
  * CMD2 : 0x02, CMD3 : 0x00
  */
-std::unique_ptr<PowerMode> getPowerMode() {
+std::unique_ptr<PowerMode> getPowerMode()
+{
   auto result = sendGetMessage<PowerMode>(0x0200);
   return std::make_unique<PowerMode>(*result.get());
 }
@@ -70,7 +79,8 @@ std::unique_ptr<PowerMode> getPowerMode() {
  * setPowerMode
  * CMD2 : 0x02, CMD3 : 0x00, Param : 1
  */
-bool setPowerMode(PowerMode mode) {
+bool setPowerMode(PowerMode mode)
+{
   auto result = sendSetMessage<uint8_t>(0x0200, static_cast<uint8_t>(mode));
   return (result != nullptr);
 }
@@ -79,7 +89,8 @@ bool setPowerMode(PowerMode mode) {
  * getColorCurtain
  * CMD2 : 0x11, CMD3 : 0x00
  */
-std::unique_ptr<CurtainColor> getColorCurtain() {
+std::unique_ptr<CurtainColor> getColorCurtain()
+{
   auto result = sendGetMessage<uint16_t>(0x1100);
   return std::make_unique<CurtainColor>(*result.get(), *(result.get() + 1),
                                         *(result.get() + 2));
@@ -89,7 +100,8 @@ std::unique_ptr<CurtainColor> getColorCurtain() {
  * setColorCurtain
  * CMD2 : 0x11, CMD3 : 0x00, Param : 6
  */
-bool setColorCurtain(uint16_t red, uint16_t green, uint16_t blue) {
+bool setColorCurtain(uint16_t red, uint16_t green, uint16_t blue)
+{
   auto result = sendSetMessage<uint16_t, uint16_t, uint16_t>(
       0x1100, std::forward<uint16_t>(red), std::forward<uint16_t>(green),
       std::forward<uint16_t>(blue));
@@ -100,7 +112,8 @@ bool setColorCurtain(uint16_t red, uint16_t green, uint16_t blue) {
  * getInputSource
  * CMD2 : 0x1A, CMD3 : 0x00
  */
-std::unique_ptr<InputSource> getInputSource() {
+std::unique_ptr<InputSource> getInputSource()
+{
   auto result = sendGetMessage<InputSource>(0x1A00);
   return std::make_unique<InputSource>(*result.get());
 }
@@ -109,7 +122,8 @@ std::unique_ptr<InputSource> getInputSource() {
  * setInputSource
  * CMD2 : 0x1A, CMD3 : 0x00, Param : 1
  */
-bool setInputSource(InputType type, InputBitDepth bitDepth) {
+bool setInputSource(InputType type, InputBitDepth bitDepth)
+{
   auto result =
       sendSetMessage<uint8_t>(0x1A00, InputSource(type, bitDepth).value);
   return (result != nullptr);
@@ -119,7 +133,8 @@ bool setInputSource(InputType type, InputBitDepth bitDepth) {
  * getTestPattern
  * CMD2 : 0x12, CMD3 : 0x03
  */
-std::unique_ptr<TestPattern> getTestPattern() {
+std::unique_ptr<TestPattern> getTestPattern()
+{
   assert(getInputSource()->type == InputType::TEST_PATTERN);
   auto result = sendGetMessage<TestPattern>(0x1203);
   return std::make_unique<TestPattern>(*result.get());
@@ -129,7 +144,8 @@ std::unique_ptr<TestPattern> getTestPattern() {
  * setTestPattern
  * CMD2 : 0x12, CMD3 : 0x03, Param : 1
  */
-bool setTestPattern(TestPattern pattern) {
+bool setTestPattern(TestPattern pattern)
+{
   assert(getInputSource()->type == InputType::TEST_PATTERN);
   auto result = sendSetMessage<uint8_t>(0x1203, static_cast<uint8_t>(pattern));
   return (result != nullptr);
@@ -139,7 +155,8 @@ bool setTestPattern(TestPattern pattern) {
  * getLEDEnable
  * CMD2 : 0x1A, CMD3 : 0x07
  */
-std::unique_ptr<LEDEnable> getLEDEnable() {
+std::unique_ptr<LEDEnable> getLEDEnable()
+{
   auto result = sendGetMessage<LEDEnable>(0x1A07);
   return std::make_unique<LEDEnable>(*result.get());
 }
@@ -149,7 +166,8 @@ std::unique_ptr<LEDEnable> getLEDEnable() {
  * CMD2 : 0x1A, CMD3 : 0x07, Param : 1
  */
 bool setLEDEnable(LEDEnableMode mode, bool redEnabled, bool greenEnabled,
-                  bool blueEnabled) {
+                  bool blueEnabled)
+{
   auto result = sendSetMessage<uint8_t>(
       0x1A07, LEDEnable(mode, redEnabled, greenEnabled, blueEnabled).value);
   return (result != nullptr);
@@ -159,7 +177,8 @@ bool setLEDEnable(LEDEnableMode mode, bool redEnabled, bool greenEnabled,
  * getLEDCurrent
  * CMD2 : 0x0B, CMD3 : 0x01
  */
-std::unique_ptr<LEDCurrent> getLEDCurrent() {
+std::unique_ptr<LEDCurrent> getLEDCurrent()
+{
   auto result = sendGetMessage<uint32_t>(0x0B01);
   return std::make_unique<LEDCurrent>(*result.get());
 }
@@ -168,7 +187,8 @@ std::unique_ptr<LEDCurrent> getLEDCurrent() {
  * setLEDCurrent
  * CMD2 : 0x0B, CMD3 : 0x01, Param : 3
  */
-bool setLEDCurrent(uint8_t red, uint8_t green, uint8_t blue) {
+bool setLEDCurrent(uint8_t red, uint8_t green, uint8_t blue)
+{
   auto result = sendSetMessage<uint8_t, uint8_t, uint8_t>(
       0x0B01, 255 - red, 255 - green, 255 - blue);
   return (result != nullptr);
@@ -178,7 +198,8 @@ bool setLEDCurrent(uint8_t red, uint8_t green, uint8_t blue) {
  * getDisplayMode
  * CMD2 : 0x1A, CMD3 : 0x1B
  */
-std::unique_ptr<DisplayMode> getDisplayMode() {
+std::unique_ptr<DisplayMode> getDisplayMode()
+{
   auto result = sendGetMessage<DisplayMode>(0x1A1B);
   return std::make_unique<DisplayMode>(*result.get());
 }
@@ -187,7 +208,8 @@ std::unique_ptr<DisplayMode> getDisplayMode() {
  * setDisplayMode
  * CMD2 : 0x1A, CMD3 : 0x1B, Param : 1
  */
-bool setDisplayMode(DisplayMode mode) {
+bool setDisplayMode(DisplayMode mode)
+{
   auto result = sendSetMessage<uint8_t>(0x1A1B, static_cast<uint8_t>(mode));
   return (result != nullptr);
 }
@@ -196,7 +218,8 @@ bool setDisplayMode(DisplayMode mode) {
  * getGammaCorrection
  * CMD2 : 0x1A, CMD3 : 0x0E
  */
-std::unique_ptr<GammaCorrection> getGammaCorrection() {
+std::unique_ptr<GammaCorrection> getGammaCorrection()
+{
   auto result = sendGetMessage<GammaCorrection>(0x1A0E);
   return std::make_unique<GammaCorrection>(*result.get());
 }
@@ -205,7 +228,8 @@ std::unique_ptr<GammaCorrection> getGammaCorrection() {
  * setGammaCorrection
  * CMD2 : 0x1A, CMD3 : 0x0E, Param : 1
  */
-bool setGammaCorrection(bool enable, bool degammaTable) {
+bool setGammaCorrection(bool enable, bool degammaTable)
+{
   auto result = sendSetMessage<uint8_t>(
       0x1A0E, GammaCorrection(degammaTable, enable).value);
   return (result != nullptr);
@@ -215,7 +239,8 @@ bool setGammaCorrection(bool enable, bool degammaTable) {
  * startPatternValidation
  * CMD2 : 0x1A, CMD3 : 0x1A, Param : 1 // dummy byte
  */
-std::unique_ptr<PatternSequenceValidation> startPatternValidation() {
+std::unique_ptr<PatternSequenceValidation> startPatternValidation()
+{
   auto result = sendSetMessage<PatternSequenceValidation>(0x1A1A, 0x00);
   return std::make_unique<PatternSequenceValidation>(*result.get());
 }
@@ -224,7 +249,8 @@ std::unique_ptr<PatternSequenceValidation> startPatternValidation() {
  * checkPatternValidation
  * CMD2 : 0x1A, CMD3 : 0x1A
  */
-std::unique_ptr<PatternSequenceValidation> checkPatternValidation() {
+std::unique_ptr<PatternSequenceValidation> checkPatternValidation()
+{
   auto result = sendGetMessage<PatternSequenceValidation>(0x1A1A);
   return std::make_unique<PatternSequenceValidation>(*result.get());
 }
@@ -233,7 +259,8 @@ std::unique_ptr<PatternSequenceValidation> checkPatternValidation() {
  * getPatternTriggerMode
  * CMD2 : 0x1A, CMD3 : 0x23
  */
-std::unique_ptr<PatternTriggerMode> getPatternTriggerMode() {
+std::unique_ptr<PatternTriggerMode> getPatternTriggerMode()
+{
   auto result = sendGetMessage<PatternTriggerMode>(0x1A23);
   return std::make_unique<PatternTriggerMode>(*result.get());
 }
@@ -242,7 +269,8 @@ std::unique_ptr<PatternTriggerMode> getPatternTriggerMode() {
  * setPatternTriggerMode
  * CMD2 : 0x1A, CMD3 : 0x23, Param : 1
  */
-bool setPatternTriggerMode(PatternTriggerMode mode) {
+bool setPatternTriggerMode(PatternTriggerMode mode)
+{
   auto result = sendSetMessage<uint8_t>(0x1A23, static_cast<uint8_t>(mode));
   return (result != nullptr);
 }
@@ -251,7 +279,8 @@ bool setPatternTriggerMode(PatternTriggerMode mode) {
  * getPatternDataSource
  * CMD2 : 0x1A, CMD3 : 0x22
  */
-std::unique_ptr<PatternDataSource> getPatternDataSource() {
+std::unique_ptr<PatternDataSource> getPatternDataSource()
+{
   auto result = sendGetMessage<PatternDataSource>(0x1A22);
   return std::make_unique<PatternDataSource>(*result.get());
 }
@@ -260,7 +289,8 @@ std::unique_ptr<PatternDataSource> getPatternDataSource() {
  * setPatternDataSource
  * CMD2 : 0x1A, CMD3 : 0x22, Param : 1
  */
-bool setPatternDataSource(PatternDataSource input) {
+bool setPatternDataSource(PatternDataSource input)
+{
   auto result = sendSetMessage<uint8_t>(0x1A22, static_cast<uint8_t>(input));
   return (result != nullptr);
 }
@@ -269,7 +299,8 @@ bool setPatternDataSource(PatternDataSource input) {
  * getPatternStatus
  * CMD2 : 0x1A, CMD3 : 0x24
  */
-std::unique_ptr<PatternStatus> getPatternStatus() {
+std::unique_ptr<PatternStatus> getPatternStatus()
+{
   auto result = sendGetMessage<PatternStatus>(0x1A24);
   return std::make_unique<PatternStatus>(*result.get());
 }
@@ -278,7 +309,8 @@ std::unique_ptr<PatternStatus> getPatternStatus() {
  * setPatternStatus
  * CMD2 : 0x1A, CMD3 : 0x24, Param : 1
  */
-bool setPatternStatus(PatternStatus mode) {
+bool setPatternStatus(PatternStatus mode)
+{
   auto result = sendSetMessage<uint8_t>(0x1A24, static_cast<uint8_t>(mode));
   return (result != nullptr);
 }
@@ -287,7 +319,8 @@ bool setPatternStatus(PatternStatus mode) {
  * getPatternPeriod
  * CMD2 : 0x1A, CMD3 : 0x29
  */
-std::unique_ptr<PatternPeriod> getPatternPeriod() {
+std::unique_ptr<PatternPeriod> getPatternPeriod()
+{
   auto result = sendGetMessage<uint32_t>(0x1A29);
   return std::make_unique<PatternPeriod>(*result.get(), *(result.get() + 1));
 }
@@ -296,7 +329,8 @@ std::unique_ptr<PatternPeriod> getPatternPeriod() {
  * setPatternPeriod
  * CMD2 : 0x1A, CMD3 : 0x29, Param : 8
  */
-bool setPatternPeriod(uint32_t exposure, uint32_t frame) {
+bool setPatternPeriod(uint32_t exposure, uint32_t frame)
+{
   assert(exposure <= frame);
   assert(frame - exposure > 230);
 
@@ -309,7 +343,8 @@ bool setPatternPeriod(uint32_t exposure, uint32_t frame) {
  * setMailboxMode
  * CMD2 : 0x1A, CMD3 : 0x33, Param : 1
  */
-bool setMailboxMode(MailboxMode mode) {
+bool setMailboxMode(MailboxMode mode)
+{
   auto result = sendSetMessage<uint8_t>(0x1A33, static_cast<uint8_t>(mode));
   return (result != nullptr);
 }
@@ -318,7 +353,8 @@ bool setMailboxMode(MailboxMode mode) {
  * setMailboxOffset
  * CMD2 : 0x1A, CMD3 : 0x32, Param : 1
  */
-bool setMailboxOffset(uint8_t offset) {
+bool setMailboxOffset(uint8_t offset)
+{
   assert(offset <= 127);
 
   auto result = sendSetMessage<uint8_t>(0x1A32, std::forward<uint8_t>(offset));
@@ -329,7 +365,8 @@ bool setMailboxOffset(uint8_t offset) {
  * setMailboxVarExpOffset
  * CMD2 : 0x1A, CMD3 : 0x3F, Param : 2
  */
-bool setMailboxVarExpOffset(uint16_t offset) {
+bool setMailboxVarExpOffset(uint16_t offset)
+{
   assert(offset <= 1823);
 
   auto result =
@@ -341,8 +378,9 @@ bool setMailboxVarExpOffset(uint16_t offset) {
  * configurePatternSequence
  * CMD2 : 0x1A, CMD3 : 0x31, Param : 4
  */
-bool configurePatternSequence(PatternSequence &patternSequence, bool repeat,
-                              uint8_t patternNumPerTrigOut2) {
+bool configurePatternSequence(PatternSequence& patternSequence, bool repeat,
+                              uint8_t patternNumPerTrigOut2)
+{
   if (repeat) {
     patternNumPerTrigOut2 =
         static_cast<uint8_t>(patternSequence.getPatternNum());
@@ -351,7 +389,8 @@ bool configurePatternSequence(PatternSequence &patternSequence, bool repeat,
       0x1A31, static_cast<uint8_t>(patternSequence.getPatternNum() - 1),
       static_cast<uint8_t>(repeat),
       static_cast<uint8_t>(patternNumPerTrigOut2 - 1),
-      static_cast<uint8_t>(0)); // Irrelevant unless PatternDataSource::INTERNAL
+      static_cast<uint8_t>(
+          0));  // Irrelevant unless PatternDataSource::INTERNAL
   return (result != nullptr);
 }
 
@@ -359,8 +398,9 @@ bool configurePatternSequence(PatternSequence &patternSequence, bool repeat,
  * configureVarExpPatSequence
  * CMD2 : 0x1A, CMD3 : 0x40, Param : 6
  */
-bool configureVarExpPatSequence(VarExpPatSequence &varExpPatSequence,
-                                bool repeat, uint16_t varExpPatNumPerTrigOut2) {
+bool configureVarExpPatSequence(VarExpPatSequence& varExpPatSequence,
+                                bool repeat, uint16_t varExpPatNumPerTrigOut2)
+{
   if (repeat) {
     varExpPatNumPerTrigOut2 =
         static_cast<uint16_t>(varExpPatSequence.getVarExpPatNum());
@@ -368,7 +408,7 @@ bool configureVarExpPatSequence(VarExpPatSequence &varExpPatSequence,
   auto result = sendSetMessage<uint16_t, uint16_t, uint8_t, uint8_t>(
       0x1A40, static_cast<uint16_t>(varExpPatSequence.getVarExpPatNum() - 1),
       static_cast<uint16_t>(varExpPatNumPerTrigOut2 - 1),
-      static_cast<uint8_t>(0), // Irrelevant unless PatternDataSource::INTERNAL
+      static_cast<uint8_t>(0),  // Irrelevant unless PatternDataSource::INTERNAL
       static_cast<uint8_t>(repeat));
   return (result != nullptr);
 }
@@ -377,9 +417,9 @@ bool configureVarExpPatSequence(VarExpPatSequence &varExpPatSequence,
  * sendPatternDisplayLUT
  * CMD2 : 0x1A, CMD3 : 0x34, Param : 3
  */
-bool sendPatternDisplayLUT(PatternSequence &patternSequence) {
-  if (!setMailboxMode(MailboxMode::PATTERN))
-    return false;
+bool sendPatternDisplayLUT(PatternSequence& patternSequence)
+{
+  if (!setMailboxMode(MailboxMode::PATTERN)) return false;
 
   setMailboxOffset(0);
 
@@ -387,8 +427,8 @@ bool sendPatternDisplayLUT(PatternSequence &patternSequence) {
 
   // TODO: possible to use sendSetMessage & addData?
   for (size_t i = 0; i < patternSequence.getPatternNum(); i++) {
-    Pattern &pattern = patternSequence.getPattern(i);
-    uint8_t *value = reinterpret_cast<uint8_t *>(&pattern.value);
+    Pattern& pattern = patternSequence.getPattern(i);
+    uint8_t* value = reinterpret_cast<uint8_t*>(&pattern.value);
     for (size_t j = 0; j < 3; j++) {
       send.data[send.length++] = *(value++);
     }
@@ -405,17 +445,17 @@ bool sendPatternDisplayLUT(PatternSequence &patternSequence) {
  * sendVarExpPatDisplayLUT
  * CMD2 : 0x1A, CMD3 : 0x3E, Param : 12
  */
-bool sendVarExpPatDisplayLUT(VarExpPatSequence &varExpPatSequence) {
-  if (!setMailboxMode(MailboxMode::VAR_EXPOSURE_PATTERN))
-    return false;
+bool sendVarExpPatDisplayLUT(VarExpPatSequence& varExpPatSequence)
+{
+  if (!setMailboxMode(MailboxMode::VAR_EXPOSURE_PATTERN)) return false;
 
   for (size_t i = 0; i < varExpPatSequence.getVarExpPatNum(); i++) {
     setMailboxVarExpOffset(i);
 
     auto send = Message(Message::Type::WRITE, 0x1A3E);
 
-    VarExpPat &varExpPat = varExpPatSequence.getVarExpPat(i);
-    uint8_t *value = reinterpret_cast<uint8_t *>(&varExpPat.pattern);
+    VarExpPat& varExpPat = varExpPatSequence.getVarExpPat(i);
+    uint8_t* value = reinterpret_cast<uint8_t*>(&varExpPat.pattern);
     for (size_t j = 0; j < 12; j++) {
       send.data[send.length++] = *(value++);
     }
@@ -430,4 +470,4 @@ bool sendVarExpPatDisplayLUT(VarExpPatSequence &varExpPatSequence) {
   return true;
 }
 
-}; // namespace multi350
+};  // namespace multi350

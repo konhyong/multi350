@@ -1,13 +1,13 @@
-#ifndef MULTI350_CONTROLLER_HPP
-#define MULTI350_CONTROLLER_HPP
+#pragma once
+// SPDX-License-Identifier: BSD-3-Clause
+#include <cstdint>
+#include <vector>
 
 #include "dlpc350.hpp"
 #include "message.hpp"
 #include "pattern.hpp"
 #include "status.hpp"
 #include "usb.hpp"
-#include <cstdint>
-#include <vector>
 
 namespace multi350 {
 
@@ -28,14 +28,24 @@ struct Projector {
   MainStatus mainStatus;
 
   Projector()
-      : index{0}, powerMode{PowerMode::NORMAL}, ledCurrent{0},
-        displayMode{DisplayMode::VIDEO}, patternStatus(PatternStatus::STOP) {}
+      : index{0},
+        powerMode{PowerMode::NORMAL},
+        ledCurrent{0},
+        displayMode{DisplayMode::VIDEO},
+        patternStatus(PatternStatus::STOP)
+  {
+  }
   Projector(unsigned int _index, PowerMode _powerMode = PowerMode::NORMAL,
             LEDCurrent _ledCurrent = LEDCurrent{0},
             DisplayMode _displayMode = DisplayMode::VIDEO,
             PatternStatus _psStatus = PatternStatus::STOP)
-      : index{_index}, powerMode{_powerMode}, ledCurrent{_ledCurrent},
-        displayMode{_displayMode}, patternStatus{_psStatus} {}
+      : index{_index},
+        powerMode{_powerMode},
+        ledCurrent{_ledCurrent},
+        displayMode{_displayMode},
+        patternStatus{_psStatus}
+  {
+  }
 };
 
 struct Controller {
@@ -68,7 +78,7 @@ struct Controller {
   /// @brief Get reference to the stored projector object
   /// @param index Index to projector
   /// @return Reference to the Projector
-  Projector &getProjector(unsigned int index);
+  Projector& getProjector(unsigned int index);
 
   // TODO: change namespace for dlpc350 on cmake
   // TODO: adjust control flag check
@@ -81,7 +91,7 @@ struct Controller {
   void controlSingle(unsigned int index);
 
   // TODO: change to a swap to match imgui function?
-  bool updateIndices(const std::vector<unsigned int> &indices);
+  bool updateIndices(const std::vector<unsigned int>& indices);
 
   /// @brief Perform software reset on all controlled projectors
   /// @return True on success
@@ -124,7 +134,7 @@ struct Controller {
   /// function.
   /// @param PatternSequence Reference to pattern sequence object
   /// @return True on success
-  bool startPatternSequence(PatternSequence &patternSequence);
+  bool startPatternSequence(PatternSequence& patternSequence);
 
   /// @brief Start variable exposure pattern sequence on all controlled
   /// projectors. shoudl create necessary variable exposure patterns prior to
@@ -132,7 +142,7 @@ struct Controller {
   /// @param varExpPatSequence Reference to variable exposure pattern sequence
   /// object
   /// @return True on success
-  bool startVarExpPatSequence(VarExpPatSequence &varExpPatSequence);
+  bool startVarExpPatSequence(VarExpPatSequence& varExpPatSequence);
 
   /// @brief Stop pattern sequence on all controlled projectors.
   /// @return True on success
@@ -142,7 +152,7 @@ struct Controller {
   /// @param currents std::vector containing LEDCurrent objects matching the
   /// current controlled projectors
   /// @return True on success
-  bool setLEDCurrent(const std::vector<LEDCurrent> &currents);
+  bool setLEDCurrent(const std::vector<LEDCurrent>& currents);
 
   /// @brief Set LED currents on the specificied projector
   /// @param index index of the projector in the controller (may not match the
@@ -159,7 +169,7 @@ struct Controller {
 
   // void showVersion();
 
-protected:
+ protected:
   /// @brief Set which DLPC350 device is currently getting controlled by the
   /// HIDAPI library. Only needed for manually configuring a single specific
   /// projector.
@@ -177,7 +187,7 @@ protected:
   /// function.
   /// @param patternSequence  Reference to pattern sequence object
   /// @return True on success
-  bool startPatternSequenceSingle(PatternSequence &patternSequence);
+  bool startPatternSequenceSingle(PatternSequence& patternSequence);
 
   /// @brief Start variable exposure pattern sequence on a single projector.
   /// Should create necessary variable exposure pattern sequence objects prior
@@ -185,7 +195,7 @@ protected:
   /// @param varExpPatSequence  Reference to variable exposure pattern sequence
   /// object
   /// @return True on success
-  bool startVarExpPatSequenceSingle(VarExpPatSequence &varExpPatSequence);
+  bool startVarExpPatSequenceSingle(VarExpPatSequence& varExpPatSequence);
 
   /// @brief Validate the current pattern configured on the DLPC350. Expects the
   /// pattern data and the related configuration to be already set.
@@ -203,5 +213,4 @@ protected:
   std::vector<Projector> projectors;
 };
 
-}; // namespace multi350
-#endif
+};  // namespace multi350

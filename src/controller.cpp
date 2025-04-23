@@ -1,4 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "multi350/controller.hpp"
+
 #include <cassert>
 #include <chrono>
 #include <iostream>
@@ -8,7 +10,8 @@ using namespace std::chrono_literals;
 
 namespace multi350 {
 
-bool Controller::open() {
+bool Controller::open()
+{
   if (!USB::open()) {
     std::cerr << "[Controller] Unable to open devices" << std::endl;
     return false;
@@ -26,19 +29,21 @@ bool Controller::open() {
   return true;
 }
 
-void Controller::close() {
+void Controller::close()
+{
   std::cout << "[Controller] Closing device connections" << std::endl;
   projectors.clear();
   USB::close();
 }
 
-void Controller::sync() {
+void Controller::sync()
+{
   if (projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
     return;
   }
 
-  for (auto &projector : projectors) {
+  for (auto& projector : projectors) {
     USB::select(projector.index);
 
     projector.powerMode = *multi350::getPowerMode();
@@ -52,26 +57,30 @@ void Controller::sync() {
   }
 }
 
-void Controller::controlAll() {
+void Controller::controlAll()
+{
   std::cout << "[Controller] Controlling all projectors" << std::endl;
-  for (auto &projector : projectors) {
+  for (auto& projector : projectors) {
     projector.controlled = true;
   }
 }
 
-void Controller::controlSingle(unsigned int index) {
+void Controller::controlSingle(unsigned int index)
+{
   assert(index < deviceNum());
   std::cout << "[Controller] Controlling projector " << index << std::endl;
   for (unsigned int i = 0; i < projectors.size(); ++i) {
     if (i == index) {
       projectors[i].controlled = true;
-    } else {
+    }
+    else {
       projectors[i].controlled = false;
     }
   }
 }
 
-bool Controller::updateIndices(const std::vector<unsigned int> &indices) {
+bool Controller::updateIndices(const std::vector<unsigned int>& indices)
+{
   if (indices.size() != Controller::deviceNum()) {
     std::cerr << "[Controller] indices don't match connected devices"
               << std::endl;
@@ -86,18 +95,20 @@ bool Controller::updateIndices(const std::vector<unsigned int> &indices) {
 }
 
 // TODO: use expected or optional to handle error cases
-Projector &Controller::getProjector(unsigned int index) {
+Projector& Controller::getProjector(unsigned int index)
+{
   assert(index < deviceNum());
   return projectors[index];
 }
 
-bool Controller::softwareReset() {
+bool Controller::softwareReset()
+{
   if (projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
     return false;
   }
 
-  for (auto &projector : projectors) {
+  for (auto& projector : projectors) {
     if (projector.controlled) {
       USB::select(projector.index);
 
@@ -111,13 +122,14 @@ bool Controller::softwareReset() {
   return true;
 }
 
-void Controller::updateStatus() {
+void Controller::updateStatus()
+{
   if (projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
     return;
   }
 
-  for (auto &projector : projectors) {
+  for (auto& projector : projectors) {
     if (projector.controlled) {
       USB::select(projector.index);
 
@@ -128,13 +140,14 @@ void Controller::updateStatus() {
   }
 }
 
-bool Controller::setPowerMode(PowerMode powerMode) {
+bool Controller::setPowerMode(PowerMode powerMode)
+{
   if (projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
     return true;
   }
 
-  for (auto &projector : projectors) {
+  for (auto& projector : projectors) {
     if (projector.controlled) {
       USB::select(projector.index);
       if (!multi350::setPowerMode(powerMode)) {
@@ -154,14 +167,15 @@ bool Controller::setPowerMode(PowerMode powerMode) {
   return true;
 }
 
-bool Controller::setPowerMode(unsigned int index, PowerMode powerMode) {
+bool Controller::setPowerMode(unsigned int index, PowerMode powerMode)
+{
   if (projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
     return true;
   }
 
   assert(index < deviceNum());
-  auto &projector = projectors[index];
+  auto& projector = projectors[index];
 
   USB::select(projector.index);
   if (!multi350::setPowerMode(powerMode)) {
@@ -179,13 +193,14 @@ bool Controller::setPowerMode(unsigned int index, PowerMode powerMode) {
   return true;
 }
 
-bool Controller::startTestPattern(TestPattern testType) {
+bool Controller::startTestPattern(TestPattern testType)
+{
   if (projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
     return true;
   }
 
-  for (auto &projector : projectors) {
+  for (auto& projector : projectors) {
     if (projector.controlled) {
       USB::select(projector.index);
       if (!multi350::setTestPattern(testType)) {
@@ -204,13 +219,14 @@ bool Controller::startTestPattern(TestPattern testType) {
   return true;
 }
 
-bool Controller::stopTestPattern() {
+bool Controller::stopTestPattern()
+{
   if (projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
     return true;
   }
 
-  for (auto &projector : projectors) {
+  for (auto& projector : projectors) {
     if (projector.controlled) {
       USB::select(projector.index);
       if (!multi350::setInputSource(InputType::PARALLEL,
@@ -225,13 +241,14 @@ bool Controller::stopTestPattern() {
   return true;
 }
 
-bool Controller::setDisplayMode(DisplayMode displayMode) {
+bool Controller::setDisplayMode(DisplayMode displayMode)
+{
   if (projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
     return true;
   }
 
-  for (auto &projector : projectors) {
+  for (auto& projector : projectors) {
     if (projector.controlled) {
       USB::select(projector.index);
       if (!Controller::setDisplayModeSingle(displayMode)) {
@@ -245,7 +262,8 @@ bool Controller::setDisplayMode(DisplayMode displayMode) {
   return true;
 }
 
-bool Controller::setDisplayModeSingle(DisplayMode displayMode) {
+bool Controller::setDisplayModeSingle(DisplayMode displayMode)
+{
   auto currentDisplayMode = multi350::getDisplayMode();
 
   // If device is already in pattern mode, stop sequence
@@ -278,18 +296,20 @@ bool Controller::setDisplayModeSingle(DisplayMode displayMode) {
   return false;
 }
 
-bool Controller::startVideoMode() {
+bool Controller::startVideoMode()
+{
   std::cout << "[Controller] Set display mode: Video" << std::endl;
   return Controller::setDisplayMode(DisplayMode::VIDEO);
 }
 
-bool Controller::startPatternSequence(PatternSequence &patternSequence) {
+bool Controller::startPatternSequence(PatternSequence& patternSequence)
+{
   if (projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
     return true;
   }
 
-  for (auto &projector : projectors) {
+  for (auto& projector : projectors) {
     if (projector.controlled) {
       USB::select(projector.index);
       if (!Controller::startPatternSequenceSingle(patternSequence)) {
@@ -305,7 +325,8 @@ bool Controller::startPatternSequence(PatternSequence &patternSequence) {
   return true;
 }
 
-bool Controller::startPatternSequenceSingle(PatternSequence &patternSequence) {
+bool Controller::startPatternSequenceSingle(PatternSequence& patternSequence)
+{
   if (!Controller::setDisplayModeSingle(DisplayMode::PATTERN)) {
     return false;
   }
@@ -345,13 +366,14 @@ bool Controller::startPatternSequenceSingle(PatternSequence &patternSequence) {
   return Controller::setPatternStatusSingle(PatternStatus::START);
 }
 
-bool Controller::startVarExpPatSequence(VarExpPatSequence &varExpPatSequence) {
+bool Controller::startVarExpPatSequence(VarExpPatSequence& varExpPatSequence)
+{
   if (projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
     return true;
   }
 
-  for (auto &projector : projectors) {
+  for (auto& projector : projectors) {
     if (projector.controlled) {
       USB::select(projector.index);
       if (!Controller::startVarExpPatSequenceSingle(varExpPatSequence)) {
@@ -369,7 +391,8 @@ bool Controller::startVarExpPatSequence(VarExpPatSequence &varExpPatSequence) {
 }
 
 bool Controller::startVarExpPatSequenceSingle(
-    VarExpPatSequence &varExpPatSequence) {
+    VarExpPatSequence& varExpPatSequence)
+{
   if (!Controller::setDisplayModeSingle(DisplayMode::PATTERN)) {
     return false;
   }
@@ -405,13 +428,14 @@ bool Controller::startVarExpPatSequenceSingle(
   return Controller::setPatternStatusSingle(PatternStatus::START);
 }
 
-bool Controller::stopPatternSequence() {
+bool Controller::stopPatternSequence()
+{
   if (projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
     return true;
   }
 
-  for (auto &projector : projectors) {
+  for (auto& projector : projectors) {
     if (projector.controlled) {
       USB::select(projector.index);
       if (!Controller::setPatternStatusSingle(PatternStatus::STOP)) {
@@ -426,7 +450,8 @@ bool Controller::stopPatternSequence() {
   return true;
 }
 
-bool Controller::validatePatternSequenceSingle() {
+bool Controller::validatePatternSequenceSingle()
+{
   Controller::setPatternStatusSingle(PatternStatus::STOP);
 
   multi350::startPatternValidation();
@@ -443,7 +468,8 @@ bool Controller::validatePatternSequenceSingle() {
     if (validation->isReady()) {
       if (validation->isValid()) {
         return true;
-      } else {
+      }
+      else {
         std::cerr << "[Controller] Pattern failed to validate" << std::endl;
         return false;
       }
@@ -455,8 +481,8 @@ bool Controller::validatePatternSequenceSingle() {
   return false;
 }
 
-bool Controller::setPatternStatusSingle(PatternStatus psStatus) {
-
+bool Controller::setPatternStatusSingle(PatternStatus psStatus)
+{
   multi350::setPatternStatus(psStatus);
 
   for (int i = 0; i < maxRetries; ++i) {
@@ -475,7 +501,8 @@ bool Controller::setPatternStatusSingle(PatternStatus psStatus) {
   return false;
 }
 
-bool Controller::setLEDCurrent(const std::vector<LEDCurrent> &currents) {
+bool Controller::setLEDCurrent(const std::vector<LEDCurrent>& currents)
+{
   if (currents.size() != projectors.size()) {
     std::cerr << "[Controller] Number of controlled projectors doesn't match "
                  "input argument."
@@ -484,7 +511,7 @@ bool Controller::setLEDCurrent(const std::vector<LEDCurrent> &currents) {
   }
 
   for (unsigned int i = 0; i < currents.size(); ++i) {
-    auto &projector = projectors[i];
+    auto& projector = projectors[i];
     if (projector.controlled) {
       Controller::setLEDCurrent(i, currents[i]);
     }
@@ -494,7 +521,8 @@ bool Controller::setLEDCurrent(const std::vector<LEDCurrent> &currents) {
   return true;
 }
 
-bool Controller::setLEDCurrent(unsigned int index, LEDCurrent ledCurrent) {
+bool Controller::setLEDCurrent(unsigned int index, LEDCurrent ledCurrent)
+{
   assert(ledCurrent.red >= 0);
   assert(ledCurrent.red <= 255);
   assert(ledCurrent.green >= 0);
@@ -525,8 +553,9 @@ bool Controller::setLEDCurrent(unsigned int index, LEDCurrent ledCurrent) {
   return true;
 }
 
-void Controller::printStatus() {
-  for (auto &projector : projectors) {
+void Controller::printStatus()
+{
+  for (auto& projector : projectors) {
     std::cout << "[Projector " << projector.index << "]" << std::endl;
     std::cout << " controlled: " << projector.controlled << std::endl;
     std::cout << " powerMode: " << static_cast<bool>(projector.powerMode)
@@ -569,4 +598,4 @@ void Controller::printStatus() {
   }
 }
 
-}; // namespace multi350
+};  // namespace multi350

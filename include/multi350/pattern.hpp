@@ -1,33 +1,33 @@
-#ifndef MULTI350_PATTERN_HPP
-#define MULTI350_PATTERN_HPP
-
-#include "usb.hpp"
+#pragma once
+// SPDX-License-Identifier: BSD-3-Clause
 #include <cassert>
 #include <cstdint>
 #include <vector>
 
+#include "usb.hpp"
+
 namespace multi350 {
 
-const size_t maxPatterns = 128;
-const size_t maxVarExpPats = 1824;
+constexpr size_t maxPatterns = 128;
+constexpr size_t maxVarExpPats = 1824;
 
 struct Pattern {
   enum class LEDSelect : uint8_t {
-    PASS = 0, // No LED, Pass through
+    PASS = 0,  // No LED, Pass through
     RED = 1,
     GREEN = 2,
-    YELLOW = 3, // Green + Red
+    YELLOW = 3,  // Green + Red
     BLUE = 4,
-    MAGENTA = 5, // Blue + Red
-    CYAN = 6,    // Blue + Green
-    WHITE = 7    // Red + Blue + Green
+    MAGENTA = 5,  // Blue + Red
+    CYAN = 6,     // Blue + Green
+    WHITE = 7     // Red + Blue + Green
   };
 
   enum class TriggerType : uint8_t {
     INTERNAL = 0,
     EXTERNAL_POSITIVE = 1,
     EXTERNAL_NEGATIVE = 2,
-    NO_TRIGGER = 3 // Continue from previous, full exposure
+    NO_TRIGGER = 3  // Continue from previous, full exposure
   };
 
   enum class Pattern1bit : uint8_t {
@@ -123,15 +123,15 @@ struct Pattern {
     uint32_t value;
     struct {
       TriggerType triggerType : 2;
-      uint8_t patternIndex : 6;
-      uint8_t bitDepth : 4;
-      LEDSelect ledSelect : 4;
-      bool invertPattern : 1;
-      bool insertBlack : 1;
-      bool bufferSwap : 1; // requires 230us before next pattern
+      uint8_t patternIndex    : 6;
+      uint8_t bitDepth        : 4;
+      LEDSelect ledSelect     : 4;
+      bool invertPattern      : 1;
+      bool insertBlack        : 1;
+      bool bufferSwap         : 1;  // requires 230us before next pattern
       bool triggerOutPrevious : 1;
-      uint8_t : 4;
-      uint8_t : 8;
+      uint8_t                 : 4;
+      uint8_t                 : 8;
     };
   };
 
@@ -139,14 +139,20 @@ struct Pattern {
   Pattern(TriggerType _triggerType, uint8_t _patternIndex, uint8_t _bitDepth,
           LEDSelect _ledSelect, bool _invertPattern, bool _insertBlack,
           bool _bufferSwap, bool _triggerOutPrevious)
-      : triggerType{_triggerType}, patternIndex{_patternIndex},
-        bitDepth{_bitDepth}, ledSelect{_ledSelect},
-        invertPattern{_invertPattern}, insertBlack{_insertBlack},
-        bufferSwap{_bufferSwap}, triggerOutPrevious{_triggerOutPrevious} {}
+      : triggerType{_triggerType},
+        patternIndex{_patternIndex},
+        bitDepth{_bitDepth},
+        ledSelect{_ledSelect},
+        invertPattern{_invertPattern},
+        insertBlack{_insertBlack},
+        bufferSwap{_bufferSwap},
+        triggerOutPrevious{_triggerOutPrevious}
+  {
+  }
 };
 
 class PatternSequence {
-public:
+ public:
   PatternSequence() : patternNum(0), exposure{0x4010}, period{0x411A} {}
 
   void clear() { patternNum = 0; }
@@ -155,8 +161,8 @@ public:
   bool addPattern(Pattern::TriggerType triggerType, PatternType patternType,
                   uint8_t bitDepth, Pattern::LEDSelect ledSelect,
                   bool invertPattern = false, bool insertBlack = false,
-                  bool triggerOutPrevious = false) {
-
+                  bool triggerOutPrevious = false)
+  {
     uint8_t patternIndex = static_cast<uint8_t>(patternType);
 
     assert(patternIndex <= 24);
@@ -172,11 +178,11 @@ public:
     return true;
   }
 
-  void addPattern(Pattern &pat) { patterns[patternNum++] = pat; }
+  void addPattern(Pattern& pat) { patterns[patternNum++] = pat; }
 
   inline size_t getPatternNum() { return patternNum; }
 
-  inline Pattern &getPattern(size_t index) { return patterns[index]; }
+  inline Pattern& getPattern(size_t index) { return patterns[index]; }
 
   void setExposure(uint32_t _exposure) { exposure = _exposure; }
   inline uint32_t getExposure() { return exposure; }
@@ -184,7 +190,7 @@ public:
   void setPeriod(uint32_t _period) { period = _period; }
   inline uint32_t getPeriod() { return period; }
 
-private:
+ private:
   size_t patternNum;
   Pattern patterns[maxPatterns];
   uint32_t exposure;
@@ -198,11 +204,13 @@ struct VarExpPat {
 
   VarExpPat() : pattern(), exposure{0}, period{0} {}
   VarExpPat(Pattern _pattern, uint32_t _exposure, uint32_t _period)
-      : pattern{_pattern}, exposure{_exposure}, period{_period} {}
+      : pattern{_pattern}, exposure{_exposure}, period{_period}
+  {
+  }
 };
 
 struct VarExpPatSequence {
-public:
+ public:
   VarExpPatSequence() : varExpPatNum(0) {}
 
   void clear() { varExpPatNum = 0; }
@@ -212,11 +220,11 @@ public:
                     Pattern::TriggerType triggerType, PatternType patternType,
                     uint8_t bitDepth, Pattern::LEDSelect ledSelect,
                     bool invertPattern = false, bool insertBlack = false,
-                    bool triggerOutPrevious = false) {
-
+                    bool triggerOutPrevious = false)
+  {
     uint8_t patternIndex = static_cast<uint8_t>(patternType);
 
-    assert(patternIndex <= 25); // 25 with bit depth 1 == white fill
+    assert(patternIndex <= 25);  // 25 with bit depth 1 == white fill
     assert(bitDepth <= 8);
 
     bool bufferSwap = (getVarExpPatNum() == 0) ? true : false;
@@ -231,18 +239,17 @@ public:
     return true;
   }
 
-  void addVarExpPat(VarExpPat &varExpPat) {
+  void addVarExpPat(VarExpPat& varExpPat)
+  {
     varExpPats[varExpPatNum++] = varExpPat;
   }
 
   inline size_t getVarExpPatNum() { return varExpPatNum; }
 
-  inline VarExpPat &getVarExpPat(size_t index) { return varExpPats[index]; }
+  inline VarExpPat& getVarExpPat(size_t index) { return varExpPats[index]; }
 
-private:
+ private:
   size_t varExpPatNum;
   VarExpPat varExpPats[maxVarExpPats];
 };
-}; // namespace multi350
-
-#endif
+};  // namespace multi350
