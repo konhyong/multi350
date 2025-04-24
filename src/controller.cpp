@@ -57,6 +57,13 @@ void Controller::sync()
   }
 }
 
+// TODO: use expected or optional to handle error cases
+Projector& Controller::getProjector(const unsigned int index)
+{
+  assert(index < deviceNum());
+  return projectors[index];
+}
+
 void Controller::controlAll()
 {
   std::cout << "[Controller] Controlling all projectors" << std::endl;
@@ -65,7 +72,7 @@ void Controller::controlAll()
   }
 }
 
-void Controller::controlSingle(unsigned int index)
+void Controller::controlSingle(const unsigned int index)
 {
   assert(index < deviceNum());
   std::cout << "[Controller] Controlling projector " << index << std::endl;
@@ -92,13 +99,6 @@ bool Controller::updateIndices(const std::vector<unsigned int>& indices)
   }
 
   return true;
-}
-
-// TODO: use expected or optional to handle error cases
-Projector& Controller::getProjector(unsigned int index)
-{
-  assert(index < deviceNum());
-  return projectors[index];
 }
 
 bool Controller::softwareReset()
@@ -140,7 +140,7 @@ void Controller::updateStatus()
   }
 }
 
-bool Controller::setPowerMode(PowerMode powerMode)
+bool Controller::setPowerMode(const PowerMode powerMode)
 {
   if (projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
@@ -167,7 +167,8 @@ bool Controller::setPowerMode(PowerMode powerMode)
   return true;
 }
 
-bool Controller::setPowerMode(unsigned int index, PowerMode powerMode)
+bool Controller::setPowerMode(const unsigned int index,
+                              const PowerMode powerMode)
 {
   if (projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
@@ -193,7 +194,7 @@ bool Controller::setPowerMode(unsigned int index, PowerMode powerMode)
   return true;
 }
 
-bool Controller::startTestPattern(TestPattern testType)
+bool Controller::startTestPattern(const TestPattern testType)
 {
   if (projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
@@ -241,7 +242,7 @@ bool Controller::stopTestPattern()
   return true;
 }
 
-bool Controller::setDisplayMode(DisplayMode displayMode)
+bool Controller::setDisplayMode(const DisplayMode displayMode)
 {
   if (projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
@@ -260,40 +261,6 @@ bool Controller::setDisplayMode(DisplayMode displayMode)
   }
 
   return true;
-}
-
-bool Controller::setDisplayModeSingle(DisplayMode displayMode)
-{
-  auto currentDisplayMode = multi350::getDisplayMode();
-
-  // If device is already in pattern mode, stop sequence
-  if (*currentDisplayMode == DisplayMode::PATTERN) {
-    auto patternStatus = multi350::getPatternStatus();
-    if (*patternStatus != PatternStatus::STOP) {
-      if (!Controller::setPatternStatusSingle(PatternStatus::STOP)) {
-        return false;
-      }
-    }
-  }
-
-  if (*currentDisplayMode == displayMode) {
-    return true;
-  }
-
-  multi350::setDisplayMode(displayMode);
-
-  for (int i = 0; i < maxRetries; ++i) {
-    std::this_thread::sleep_for(100ms);
-
-    auto newDisplayMode = multi350::getDisplayMode();
-    if (*newDisplayMode == displayMode) {
-      return true;
-    }
-  }
-
-  std::cerr << "[Controller] Exceeded max retries on display mode change"
-            << std::endl;
-  return false;
 }
 
 bool Controller::startVideoMode()
@@ -325,47 +292,6 @@ bool Controller::startPatternSequence(PatternSequence& patternSequence)
   return true;
 }
 
-bool Controller::startPatternSequenceSingle(PatternSequence& patternSequence)
-{
-  if (!Controller::setDisplayModeSingle(DisplayMode::PATTERN)) {
-    return false;
-  }
-
-  if (!multi350::setPatternDataSource(PatternDataSource::EXTERNAL)) {
-    std::cerr << "[Controller] Failed to set pattern data source" << std::endl;
-    return false;
-  }
-
-  if (!multi350::configurePatternSequence(patternSequence)) {
-    std::cerr << "[Controller] Failed to configure pattern sequence"
-              << std::endl;
-    return false;
-  }
-
-  if (!multi350::setPatternTriggerMode(PatternTriggerMode::MODE0)) {
-    std::cerr << "[Controller] Failed to set pattern trigger mode" << std::endl;
-    return false;
-  }
-
-  if (!multi350::setPatternPeriod(patternSequence.getExposure(),
-                                  patternSequence.getPeriod())) {
-    std::cerr << "[Controller] Failed to set pattern period" << std::endl;
-    return false;
-  }
-
-  if (!multi350::sendPatternDisplayLUT(patternSequence)) {
-    std::cerr << "[Controller] Failed to send pattern sequence to LUT"
-              << std::endl;
-    return false;
-  }
-
-  if (!Controller::validatePatternSequenceSingle()) {
-    return false;
-  }
-
-  return Controller::setPatternStatusSingle(PatternStatus::START);
-}
-
 bool Controller::startVarExpPatSequence(VarExpPatSequence& varExpPatSequence)
 {
   if (projectors.empty()) {
@@ -390,44 +316,6 @@ bool Controller::startVarExpPatSequence(VarExpPatSequence& varExpPatSequence)
   return true;
 }
 
-bool Controller::startVarExpPatSequenceSingle(
-    VarExpPatSequence& varExpPatSequence)
-{
-  if (!Controller::setDisplayModeSingle(DisplayMode::PATTERN)) {
-    return false;
-  }
-
-  if (!multi350::setPatternDataSource(PatternDataSource::EXTERNAL)) {
-    std::cerr << "[Controller] Failed to set pattern data source" << std::endl;
-    return false;
-  }
-
-  if (!multi350::setPatternTriggerMode(PatternTriggerMode::MODE4)) {
-    std::cerr << "[Controller] Failed to set pattern trigger mode" << std::endl;
-    return false;
-  }
-
-  if (!multi350::configureVarExpPatSequence(varExpPatSequence)) {
-    std::cerr
-        << "[Controller] Failed to configure variable exposure pattern sequence"
-        << std::endl;
-    return false;
-  }
-
-  if (!multi350::sendVarExpPatDisplayLUT(varExpPatSequence)) {
-    std::cerr << "[Controller] Failed to send variable exposure pattern "
-                 "sequence to LUT"
-              << std::endl;
-    return false;
-  }
-
-  if (!Controller::validatePatternSequenceSingle()) {
-    return false;
-  }
-
-  return Controller::setPatternStatusSingle(PatternStatus::START);
-}
-
 bool Controller::stopPatternSequence()
 {
   if (projectors.empty()) {
@@ -450,57 +338,6 @@ bool Controller::stopPatternSequence()
   return true;
 }
 
-bool Controller::validatePatternSequenceSingle()
-{
-  Controller::setPatternStatusSingle(PatternStatus::STOP);
-
-  multi350::startPatternValidation();
-
-  auto checkBusy = multi350::checkPatternValidation();
-  if (checkBusy->isReady()) {
-    std::cerr << "[Controller] Validation command not executed properly"
-              << std::endl;
-    return false;
-  }
-
-  for (int i = 0; i < maxRetries; ++i) {
-    auto validation = multi350::checkPatternValidation();
-    if (validation->isReady()) {
-      if (validation->isValid()) {
-        return true;
-      }
-      else {
-        std::cerr << "[Controller] Pattern failed to validate" << std::endl;
-        return false;
-      }
-    }
-    std::this_thread::sleep_for(100ms);
-  }
-
-  std::cerr << "[Controller] Exceed max retries on validate" << std::endl;
-  return false;
-}
-
-bool Controller::setPatternStatusSingle(PatternStatus psStatus)
-{
-  multi350::setPatternStatus(psStatus);
-
-  for (int i = 0; i < maxRetries; ++i) {
-    std::this_thread::sleep_for(100ms);
-
-    auto currentStatus = multi350::getPatternStatus();
-    if (*currentStatus == psStatus) {
-      return true;
-    }
-    multi350::setPatternStatus(psStatus);
-  }
-
-  std::cerr
-      << "[Controller] Exceeded max retries on Pattern Sequence start/stop"
-      << std::endl;
-  return false;
-}
-
 bool Controller::setLEDCurrent(const std::vector<LEDCurrent>& currents)
 {
   if (currents.size() != projectors.size()) {
@@ -521,7 +358,8 @@ bool Controller::setLEDCurrent(const std::vector<LEDCurrent>& currents)
   return true;
 }
 
-bool Controller::setLEDCurrent(unsigned int index, LEDCurrent ledCurrent)
+bool Controller::setLEDCurrent(const unsigned int index,
+                               const LEDCurrent ledCurrent)
 {
   assert(ledCurrent.red >= 0);
   assert(ledCurrent.red <= 255);
@@ -598,4 +436,167 @@ void Controller::printStatus()
   }
 }
 
+bool Controller::setDisplayModeSingle(const DisplayMode displayMode)
+{
+  auto currentDisplayMode = multi350::getDisplayMode();
+
+  // If device is already in pattern mode, stop sequence
+  if (*currentDisplayMode == DisplayMode::PATTERN) {
+    auto patternStatus = multi350::getPatternStatus();
+    if (*patternStatus != PatternStatus::STOP) {
+      if (!Controller::setPatternStatusSingle(PatternStatus::STOP)) {
+        return false;
+      }
+    }
+  }
+
+  if (*currentDisplayMode == displayMode) {
+    return true;
+  }
+
+  multi350::setDisplayMode(displayMode);
+
+  for (int i = 0; i < maxRetries; ++i) {
+    std::this_thread::sleep_for(100ms);
+
+    auto newDisplayMode = multi350::getDisplayMode();
+    if (*newDisplayMode == displayMode) {
+      return true;
+    }
+  }
+
+  std::cerr << "[Controller] Exceeded max retries on display mode change"
+            << std::endl;
+  return false;
+}
+
+bool Controller::startPatternSequenceSingle(PatternSequence& patternSequence)
+{
+  if (!Controller::setDisplayModeSingle(DisplayMode::PATTERN)) {
+    return false;
+  }
+
+  if (!multi350::setPatternDataSource(PatternDataSource::EXTERNAL)) {
+    std::cerr << "[Controller] Failed to set pattern data source" << std::endl;
+    return false;
+  }
+
+  if (!multi350::configurePatternSequence(patternSequence)) {
+    std::cerr << "[Controller] Failed to configure pattern sequence"
+              << std::endl;
+    return false;
+  }
+
+  if (!multi350::setPatternTriggerMode(PatternTriggerMode::MODE0)) {
+    std::cerr << "[Controller] Failed to set pattern trigger mode" << std::endl;
+    return false;
+  }
+
+  if (!multi350::setPatternPeriod(patternSequence.getExposure(),
+                                  patternSequence.getPeriod())) {
+    std::cerr << "[Controller] Failed to set pattern period" << std::endl;
+    return false;
+  }
+
+  if (!multi350::sendPatternDisplayLUT(patternSequence)) {
+    std::cerr << "[Controller] Failed to send pattern sequence to LUT"
+              << std::endl;
+    return false;
+  }
+
+  if (!Controller::validatePatternSequenceSingle()) {
+    return false;
+  }
+
+  return Controller::setPatternStatusSingle(PatternStatus::START);
+}
+
+bool Controller::startVarExpPatSequenceSingle(
+    VarExpPatSequence& varExpPatSequence)
+{
+  if (!Controller::setDisplayModeSingle(DisplayMode::PATTERN)) {
+    return false;
+  }
+
+  if (!multi350::setPatternDataSource(PatternDataSource::EXTERNAL)) {
+    std::cerr << "[Controller] Failed to set pattern data source" << std::endl;
+    return false;
+  }
+
+  if (!multi350::setPatternTriggerMode(PatternTriggerMode::MODE4)) {
+    std::cerr << "[Controller] Failed to set pattern trigger mode" << std::endl;
+    return false;
+  }
+
+  if (!multi350::configureVarExpPatSequence(varExpPatSequence)) {
+    std::cerr
+        << "[Controller] Failed to configure variable exposure pattern sequence"
+        << std::endl;
+    return false;
+  }
+
+  if (!multi350::sendVarExpPatDisplayLUT(varExpPatSequence)) {
+    std::cerr << "[Controller] Failed to send variable exposure pattern "
+                 "sequence to LUT"
+              << std::endl;
+    return false;
+  }
+
+  if (!Controller::validatePatternSequenceSingle()) {
+    return false;
+  }
+
+  return Controller::setPatternStatusSingle(PatternStatus::START);
+}
+
+bool Controller::validatePatternSequenceSingle()
+{
+  Controller::setPatternStatusSingle(PatternStatus::STOP);
+
+  multi350::startPatternValidation();
+
+  auto checkBusy = multi350::checkPatternValidation();
+  if (checkBusy->isReady()) {
+    std::cerr << "[Controller] Validation command not executed properly"
+              << std::endl;
+    return false;
+  }
+
+  for (int i = 0; i < maxRetries; ++i) {
+    auto validation = multi350::checkPatternValidation();
+    if (validation->isReady()) {
+      if (validation->isValid()) {
+        return true;
+      }
+      else {
+        std::cerr << "[Controller] Pattern failed to validate" << std::endl;
+        return false;
+      }
+    }
+    std::this_thread::sleep_for(100ms);
+  }
+
+  std::cerr << "[Controller] Exceed max retries on validate" << std::endl;
+  return false;
+}
+
+bool Controller::setPatternStatusSingle(const PatternStatus psStatus)
+{
+  multi350::setPatternStatus(psStatus);
+
+  for (int i = 0; i < maxRetries; ++i) {
+    std::this_thread::sleep_for(100ms);
+
+    auto currentStatus = multi350::getPatternStatus();
+    if (*currentStatus == psStatus) {
+      return true;
+    }
+    multi350::setPatternStatus(psStatus);
+  }
+
+  std::cerr
+      << "[Controller] Exceeded max retries on Pattern Sequence start/stop"
+      << std::endl;
+  return false;
+}
 };  // namespace multi350

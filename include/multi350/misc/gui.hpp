@@ -10,67 +10,12 @@
 
 using namespace al;
 
-/// @brief GUI for multi350 using allolib
+/// @brief multi350 with GUI for use with allolib library.
+/// https://github.com/AlloSphere-Research-Group/allolib
 struct Multi350GUI {
-  multi350::Controller multi350;
-
-  std::array<multi350::PatternSequence, 4> patternSequences;
-  int patternSequenceIndex{0};
-
-  multi350::VarExpPatSequence varExpPatSequences;
-
-  Trigger device_list{"device_list", "multi350"};
-  Trigger device_open{"device_open", "multi350"};
-  Trigger device_close{"device_close", "multi350"};
-
-  ParameterInt proj0_index{"proj0_index", "multi350", 0, 0, 3};
-  ParameterInt proj1_index{"proj1_index", "multi350", 1, 0, 3};
-  ParameterInt proj2_index{"proj2_index", "multi350", 2, 0, 3};
-  ParameterInt proj3_index{"proj3_index", "multi350", 3, 0, 3};
-  std::vector<unsigned int> usb_idx;
-  std::vector<std::string> usb_names;
-  Trigger apply_indices{"apply_indices", "multi350"};
-  Trigger save_indices{"save_indices", "multi350"};
-
-  ParameterBool proj0_control{"proj0", "multi350", true};
-  ParameterBool proj1_control{"proj1", "multi350", true};
-  ParameterBool proj2_control{"proj2", "multi350", true};
-  ParameterBool proj3_control{"proj3", "multi350", true};
-
-  Trigger reset{"reset", "multi350"};
-  Trigger print_status{"print_status", "multi350"};
-
-  Trigger test_start{"test_start", "multi350"};
-  Trigger test_stop{"test_stop", "multi350"};
-
-  Trigger power_normal{"power_normal", "multi350"};
-  Trigger power_standby{"power_standby", "multi350"};
-
-  Trigger video_mode{"video_mode", "multi350"};
-  Trigger varExpPat_start{"varExpPat_start", "multi350"};
-  Trigger pattern_start{"pattern_start", "multi350"};
-  Trigger pattern_stop{"pattern_stop", "multi350"};
-
-  Trigger apply_led{"apply_led", "multi350"};
-  Trigger save_led{"save_led", "multi350"};
-
-  ParameterInt proj0_red{"proj0_red", "multi350", 40, 0, 255};
-  ParameterInt proj0_green{"proj0_green", "multi350", 90, 0, 255};
-  ParameterInt proj0_blue{"proj0_blue", "multi350", 255, 0, 255};
-  ParameterInt proj1_red{"proj1_red", "multi350", 40, 0, 255};
-  ParameterInt proj1_green{"proj1_green", "multi350", 90, 0, 255};
-  ParameterInt proj1_blue{"proj1_blue", "multi350", 255, 0, 255};
-  ParameterInt proj2_red{"proj2_red", "multi350", 40, 0, 255};
-  ParameterInt proj2_green{"proj2_green", "multi350", 90, 0, 255};
-  ParameterInt proj2_blue{"proj2_blue", "multi350", 255, 0, 255};
-  ParameterInt proj3_red{"proj3_red", "multi350", 40, 0, 255};
-  ParameterInt proj3_green{"proj3_green", "multi350", 90, 0, 255};
-  ParameterInt proj3_blue{"proj3_blue", "multi350", 255, 0, 255};
-
-  // TODO: change file to std::file to handle paths
-  PresetHandler preset_currents{"presets/currents"};
-  PresetHandler preset_projectors{"presets/projectors"};
-
+ public:
+  /// @brief Initialize the gui and setup parameters and presets
+  /// @return True on success
   bool init()
   {
     preset_currents << proj0_red << proj0_green << proj0_blue << proj1_red
@@ -82,8 +27,8 @@ struct Multi350GUI {
                       << proj3_index;
     preset_projectors.recallPresetSynchronous("projectors");
 
-    if (!multi350.init()) {
-      std::cerr << "Failed to initialize projector GUI" << std::endl;
+    if (!controller.init()) {
+      std::cerr << "Failed to initialize multi350 controller" << std::endl;
       return false;
     }
 
@@ -94,12 +39,14 @@ struct Multi350GUI {
     return true;
   }
 
+  /// @brief Shutdown the controller
   void shutdown()
   {
-    multi350.close();
-    multi350.exit();
+    controller.close();
+    controller.exit();
   }
 
+  /// @brief Configure the imgui using parameters
   void configureGUI()
   {
     ImGui::Begin("MULTI350 Control");
@@ -148,15 +95,15 @@ struct Multi350GUI {
 
     ImGui::NewLine();
 
-    if (multi350.isConnected()) {
+    if (controller.isConnected()) {
       ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Connected: %u",
-                         multi350.deviceNum());
+                         controller.deviceNum());
     }
     else {
       ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Not Connected");
     }
 
-    int device_num = multi350.deviceNum();
+    int device_num = controller.deviceNum();
     if (device_num < 4) {
       proj3_control.setHint("hide", true);
       if (device_num < 3) {
@@ -258,27 +205,28 @@ struct Multi350GUI {
     ImGui::End();
   }
 
+  /// @brief Set up the parameter callbacks
   void setupCallbacks()
   {
     device_list.registerChangeCallback(
-        [&](float value) { multi350.printDevices(); });
+        [&](float value) { controller.printDevices(); });
 
-    device_open.registerChangeCallback([&](float value) { multi350.open(); });
+    device_open.registerChangeCallback([&](float value) { controller.open(); });
 
     reset.registerChangeCallback(
-        [&](float value) { multi350.softwareReset(); });
+        [&](float value) { controller.softwareReset(); });
 
     print_status.registerChangeCallback([&](float value) {
-      multi350.updateStatus();
-      multi350.printStatus();
+      controller.updateStatus();
+      controller.printStatus();
     });
 
     test_start.registerChangeCallback([&](float value) {
-      multi350.startTestPattern(multi350::TestPattern::COLOR_BARS);
+      controller.startTestPattern(multi350::TestPattern::COLOR_BARS);
     });
 
     test_stop.registerChangeCallback(
-        [&](float value) { multi350.stopTestPattern(); });
+        [&](float value) { controller.stopTestPattern(); });
 
     apply_led.registerChangeCallback([&](float value) {
       std::vector<multi350::LEDCurrent> currents;
@@ -295,63 +243,65 @@ struct Multi350GUI {
                             static_cast<uint8_t>(proj3_green.get()),
                             static_cast<uint8_t>(proj3_blue.get()));
 
-      multi350.setLEDCurrent(currents);
+      controller.setLEDCurrent(currents);
     });
 
     save_led.registerChangeCallback(
         [&](float value) { preset_currents.storePreset("currents"); });
 
     varExpPat_start.registerChangeCallback([&](float value) {
-      multi350.startVarExpPatSequence(varExpPatSequences);
+      controller.startVarExpPatSequence(varExpPatSequences);
     });
 
     pattern_start.registerChangeCallback([&](float value) {
-      multi350.startPatternSequence(patternSequences[patternSequenceIndex]);
+      controller.startPatternSequence(patternSequences[patternSequenceIndex]);
     });
 
     pattern_stop.registerChangeCallback(
-        [&](float value) { multi350.stopPatternSequence(); });
+        [&](float value) { controller.stopPatternSequence(); });
 
     video_mode.registerChangeCallback(
-        [&](float value) { multi350.startVideoMode(); });
+        [&](float value) { controller.startVideoMode(); });
 
-    device_close.registerChangeCallback([&](float value) { multi350.close(); });
+    device_close.registerChangeCallback(
+        [&](float value) { controller.close(); });
 
     proj0_control.registerChangeCallback([&](float value) {
-      auto& projector = multi350.getProjector(0);
+      auto& projector = controller.getProjector(0);
       projector.controlled = value;
     });
 
     proj1_control.registerChangeCallback([&](float value) {
-      auto& projector = multi350.getProjector(1);
+      auto& projector = controller.getProjector(1);
       projector.controlled = value;
     });
 
     proj2_control.registerChangeCallback([&](float value) {
-      auto& projector = multi350.getProjector(2);
+      auto& projector = controller.getProjector(2);
       projector.controlled = value;
     });
 
     proj3_control.registerChangeCallback([&](float value) {
-      auto& projector = multi350.getProjector(3);
+      auto& projector = controller.getProjector(3);
       projector.controlled = value;
     });
 
     power_normal.registerChangeCallback([&](float value) {
-      multi350.setPowerMode(multi350::PowerMode::NORMAL);
+      controller.setPowerMode(multi350::PowerMode::NORMAL);
     });
 
     power_standby.registerChangeCallback([&](float value) {
-      multi350.setPowerMode(multi350::PowerMode::STANDBY);
+      controller.setPowerMode(multi350::PowerMode::STANDBY);
     });
 
     apply_indices.registerChangeCallback(
-        [&](float value) { multi350.updateIndices(usb_idx); });
+        [&](float value) { controller.updateIndices(usb_idx); });
 
     save_indices.registerChangeCallback(
         [&](float value) { preset_projectors.storePreset("projectors"); });
   }
 
+  /// @brief Set up the preset pattern sequences
   void setupPatternSequences()
   {
     using namespace multi350;
@@ -417,6 +367,7 @@ struct Multi350GUI {
         true, false);
   }
 
+  /// @brief Modify projector indices if order needs to be changed
   void setupProjectorIndices()
   {
     // // TODO: adjust for less than 4 projectors
@@ -439,4 +390,70 @@ struct Multi350GUI {
 
     // multi350.updateIndices(usb_idx);
   }
+
+ public:
+  /// @brief Controller for multiple DLPC350 devices
+  multi350::Controller controller;
+
+ protected:
+  /// @brief Preset pattern sequences for 8, 7, 4, 2 bit depths
+  std::array<multi350::PatternSequence, 4> patternSequences;
+  /// @brief Index for the active pattern sequence
+  int patternSequenceIndex{0};
+
+  /// @brief Preset variable exposure sequence
+  multi350::VarExpPatSequence varExpPatSequences;
+
+  Trigger device_list{"device_list", "multi350"};
+  Trigger device_open{"device_open", "multi350"};
+  Trigger device_close{"device_close", "multi350"};
+
+  ParameterInt proj0_index{"proj0_index", "multi350", 0, 0, 3};
+  ParameterInt proj1_index{"proj1_index", "multi350", 1, 0, 3};
+  ParameterInt proj2_index{"proj2_index", "multi350", 2, 0, 3};
+  ParameterInt proj3_index{"proj3_index", "multi350", 3, 0, 3};
+  std::vector<unsigned int> usb_idx;
+  std::vector<std::string> usb_names;
+
+  Trigger apply_indices{"apply_indices", "multi350"};
+  Trigger save_indices{"save_indices", "multi350"};
+
+  ParameterBool proj0_control{"proj0", "multi350", true};
+  ParameterBool proj1_control{"proj1", "multi350", true};
+  ParameterBool proj2_control{"proj2", "multi350", true};
+  ParameterBool proj3_control{"proj3", "multi350", true};
+
+  Trigger reset{"reset", "multi350"};
+  Trigger print_status{"print_status", "multi350"};
+
+  Trigger test_start{"test_start", "multi350"};
+  Trigger test_stop{"test_stop", "multi350"};
+
+  Trigger power_normal{"power_normal", "multi350"};
+  Trigger power_standby{"power_standby", "multi350"};
+
+  Trigger video_mode{"video_mode", "multi350"};
+  Trigger varExpPat_start{"varExpPat_start", "multi350"};
+  Trigger pattern_start{"pattern_start", "multi350"};
+  Trigger pattern_stop{"pattern_stop", "multi350"};
+
+  Trigger apply_led{"apply_led", "multi350"};
+  Trigger save_led{"save_led", "multi350"};
+
+  ParameterInt proj0_red{"proj0_red", "multi350", 40, 0, 255};
+  ParameterInt proj0_green{"proj0_green", "multi350", 90, 0, 255};
+  ParameterInt proj0_blue{"proj0_blue", "multi350", 255, 0, 255};
+  ParameterInt proj1_red{"proj1_red", "multi350", 40, 0, 255};
+  ParameterInt proj1_green{"proj1_green", "multi350", 90, 0, 255};
+  ParameterInt proj1_blue{"proj1_blue", "multi350", 255, 0, 255};
+  ParameterInt proj2_red{"proj2_red", "multi350", 40, 0, 255};
+  ParameterInt proj2_green{"proj2_green", "multi350", 90, 0, 255};
+  ParameterInt proj2_blue{"proj2_blue", "multi350", 255, 0, 255};
+  ParameterInt proj3_red{"proj3_red", "multi350", 40, 0, 255};
+  ParameterInt proj3_green{"proj3_green", "multi350", 90, 0, 255};
+  ParameterInt proj3_blue{"proj3_blue", "multi350", 255, 0, 255};
+
+  // TODO: change file to std::file to handle paths
+  PresetHandler preset_currents{"presets/currents"};
+  PresetHandler preset_projectors{"presets/projectors"};
 };

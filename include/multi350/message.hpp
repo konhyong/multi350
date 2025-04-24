@@ -8,45 +8,64 @@
 #include "usb.hpp"
 
 namespace multi350 {
-
+/// @brief Internal settings for USB messages
 namespace internal {
-constexpr size_t maxMessageDataSize = 512;
-constexpr bool verbose = false;
+/// @brief Maximum data size for each command in bytes
+inline constexpr size_t maxMessageDataSize = 512;
+/// @brief Enable verbose logging for debug purposes
+inline constexpr bool verbose = false;
 };  // namespace internal
 
+/// @brief Message data handler
 struct Message {
   enum class Type : bool { WRITE = 0, READ = 1 };
+
   Message() : flags{0, 0, 0, 1, Type::WRITE}, sequence{0}, length{0}, data{0} {}
 
+  /// @brief Constructs message with/without data bytes
+  /// @tparam ...ParamList Type of data in data bytes if present
+  /// @param _type Write/Read
+  /// @param cmd Two bytes CMD2 + CMD3 indicating command.
+  /// @param ...params Contents of data bytes if present
   template <typename... ParamList>
-  Message(Type _type, uint16_t cmd, ParamList&&... params)
+  Message(const Type _type, const uint16_t cmd, const ParamList&&... params)
       : flags{0, 0, 0, 1, _type}, sequence{0}, length{2}, data{0}
   {
     command = cmd;
     if (sizeof...(params) > 0) {
-      addData(std::forward<ParamList>(params)...);
+      addData(std::forward<const ParamList>(params)...);
     }
   }
 
+  /// @brief Recursively adds data to message
   inline void addData() {}
 
+  /// @brief Adding data to the message
+  /// @tparam T Type of data
+  /// @param first Content of data
   template <typename T>
-  inline void addData(T first)
+  inline void addData(const T first)
   {
     T* ptr = reinterpret_cast<T*>(&data[length]);
     *ptr = first;
     length += sizeof(first);
   }
 
+  /// @brief Recursively adds data to message
+  /// @tparam T Type of first data
+  /// @tparam ...ParamList Types of following data
+  /// @param first Content of first data
+  /// @param ...params Contents of following data
   template <typename T, typename... ParamList>
-  inline void addData(T first, ParamList&&... params)
+  inline void addData(const T first, const ParamList&&... params)
   {
     addData(first);
     if (sizeof...(params) > 0) {
-      addData(std::forward<ParamList>(params)...);
+      addData(std::forward<const ParamList>(params)...);
     }
   }
 
+  /// @brief Flags byte
   struct {
     uint8_t destination : 3;
     uint8_t reserved    : 2;
@@ -55,15 +74,23 @@ struct Message {
     Type rw             : 1;
   } flags;
 
+  /// @brief Sequence byte if message is larger than 64 bytes and gets sent as
+  /// multiple USB packets
   uint8_t sequence;
+  /// @brief Length of data packet. Denotes total number of command bytes + data
+  /// bytes
   uint16_t length;
 
   union {
+    /// @brief Command bytes (CMD2 + CMD3)
     uint16_t command;
+    /// @brief Array containing data packet
     uint8_t data[internal::maxMessageDataSize];
   };
 };
 
+/// @brief Read the usb packet for the message
+/// @return Message data
 extern inline std::unique_ptr<Message> read()
 {
   auto received = USB::read();
@@ -80,7 +107,10 @@ extern inline std::unique_ptr<Message> read()
   return ret;
 }
 
-extern inline int32_t write(Message& msg)
+/// @brief Write USB packet containing message
+/// @param msg Message data
+/// @return Number of bytes written
+extern inline int32_t write(const Message& msg)
 {
   uint16_t headerBytes =
       sizeof(msg.flags) + sizeof(msg.sequence) + sizeof(msg.length);
@@ -118,8 +148,12 @@ extern inline int32_t write(Message& msg)
 template <typename T>
 using MessageData = std::unique_ptr<T, std::default_delete<T[]>>;
 
+/// @brief Sends message to DLPC350 and gets the reply
+/// @tparam T Type of data expected to return
+/// @param msg Message data to send
+/// @return Data packet of the reply
 template <typename T = uint8_t>
-extern MessageData<T> transact(Message& msg)
+extern MessageData<T> transact(const Message& msg)
 {
   int32_t result = write(msg);
 
@@ -170,27 +204,42 @@ extern MessageData<T> transact(Message& msg)
   return nullptr;
 }
 
+/// @brief Send command to get data from DLPC350
+/// @tparam T Type of expected data
+/// @param cmd Command to send
+/// @return Data from DLPC350
 template <typename T = uint8_t>
-extern inline MessageData<T> sendGetMessage(uint16_t cmd)
+extern inline MessageData<T> sendGetMessage(const uint16_t cmd)
 {
   auto send = Message(Message::Type::READ, cmd);
   return transact<T>(send);
 }
 
+/// @brief Send command to set data on DLPC350
+/// @tparam ...ParamList Type of data to send
+/// @param cmd Command to send
+/// @param ...params Data to send
+/// @return Response from DLPC350
 template <typename... ParamList>
-extern inline MessageData<uint8_t> sendSetMessage(uint16_t cmd,
-                                                  ParamList&&... params)
+extern inline MessageData<uint8_t> sendSetMessage(const uint16_t cmd,
+                                                  const ParamList&&... params)
 {
-  auto send =
-      Message(Message::Type::WRITE, cmd, std::forward<ParamList>(params)...);
+  auto send = Message(Message::Type::WRITE, cmd,
+                      std::forward<const ParamList>(params)...);
   return transact<uint8_t>(send);
 }
 
+/// @brief Send message to DLPC350 with no acknowledge expected
+/// @tparam ...ParamList Type of data to send
+/// @param cmd Command to send
+/// @param ...params Contents of data packet to send
+/// @return Number of bytes written
 template <typename... ParamList>
-extern inline int32_t sendNoAckMessage(uint16_t cmd, ParamList&&... params)
+extern inline int32_t sendNoAckMessage(const uint16_t cmd,
+                                       const ParamList&&... params)
 {
-  auto send =
-      Message(Message::Type::WRITE, cmd, std::forward<ParamList>(params)...);
+  auto send = Message(Message::Type::WRITE, cmd,
+                      std::forward<const ParamList>(params)...);
   send.flags.reply = false;
 
   return write(send);

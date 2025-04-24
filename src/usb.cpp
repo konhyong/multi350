@@ -56,7 +56,7 @@ inline bool isConnected() { return !devices.empty(); }
 
 inline unsigned int deviceNum() { return devices.size(); }
 
-inline bool select(unsigned int index)
+inline bool select(const unsigned int index)
 {
   if (index >= devices.size()) {
     std::cerr << "Unable to select device " << index << std::endl;
@@ -106,7 +106,7 @@ inline Buffer read()
   return ret;
 }
 
-inline int32_t write(Buffer& data)
+inline int32_t write(const Buffer& data)
 {
   if (!isConnected()) return -1;
 

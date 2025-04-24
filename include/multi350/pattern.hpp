@@ -8,9 +8,12 @@
 
 namespace multi350 {
 
-constexpr size_t maxPatterns = 128;
-constexpr size_t maxVarExpPats = 1824;
+/// @brief Maximum pattern entries stored in LUT
+inline constexpr size_t maxPatterns = 128;
+/// @brief Maximum variable exposure pattern entries stored in LUT
+inline constexpr size_t maxVarExpPats = 1824;
 
+/// @brief Pattern data
 struct Pattern {
   enum class LEDSelect : uint8_t {
     PASS = 0,  // No LED, Pass through
@@ -151,17 +154,33 @@ struct Pattern {
   }
 };
 
+/// @brief Pattern sequence data
 class PatternSequence {
  public:
-  PatternSequence() : patternNum(0), exposure{0x4010}, period{0x411A} {}
+  PatternSequence() : m_patternNum(0), m_exposure{0x4010}, m_period{0x411A} {}
 
-  void clear() { patternNum = 0; }
+  /// @brief Clear the pattern sequence data
+  inline void clear() { m_patternNum = 0; }
 
+  /// @brief Add pattern to the sequence
+  /// @tparam PatternType enum defining patterns of which bitDepth to use
+  /// @param triggerType Type of trigger for the pattern
+  /// @param patternType Which pattern type to use
+  /// @param bitDepth Bit depth of pattern
+  /// @param ledSelect Which LEDs to activate
+  /// @param invertPattern Invert pattern on 1
+  /// @param insertBlack Insert black-fill after current pattern. Requires 230us
+  /// before the start of next pattern.
+  /// @param triggerOutPrevious Behavior of TriggerOut1. This setting cannot be
+  /// combined with the black-fill pattern
+  /// @return True on success
   template <typename PatternType>
-  bool addPattern(Pattern::TriggerType triggerType, PatternType patternType,
-                  uint8_t bitDepth, Pattern::LEDSelect ledSelect,
-                  bool invertPattern = false, bool insertBlack = false,
-                  bool triggerOutPrevious = false)
+  bool addPattern(const Pattern::TriggerType triggerType,
+                  const PatternType patternType, const uint8_t bitDepth,
+                  const Pattern::LEDSelect ledSelect,
+                  const bool invertPattern = false,
+                  const bool insertBlack = false,
+                  const bool triggerOutPrevious = false)
   {
     uint8_t patternIndex = static_cast<uint8_t>(patternType);
 
@@ -178,28 +197,62 @@ class PatternSequence {
     return true;
   }
 
-  void addPattern(Pattern& pat) { patterns[patternNum++] = pat; }
+  /// @brief Add pattern to sequence
+  /// @param pat Pattern data to add
+  inline void addPattern(const Pattern& pat)
+  {
+    m_patterns[m_patternNum++] = pat;
+  }
 
-  inline size_t getPatternNum() { return patternNum; }
+  /// @brief Get number of patterns in sequence
+  /// @return Number of patterns
+  inline size_t getPatternNum() { return m_patternNum; }
 
-  inline Pattern& getPattern(size_t index) { return patterns[index]; }
+  /// @brief Get pattern stored at index
+  /// @param index Index of pattern
+  /// @return Stored pattern
+  inline Pattern& getPattern(const size_t index) { return m_patterns[index]; }
 
-  void setExposure(uint32_t _exposure) { exposure = _exposure; }
-  inline uint32_t getExposure() { return exposure; }
+  /// @brief Set the exposure time of a pattern. Must be same as exposure time
+  /// or 230us less than the frame period. In external video input pattern
+  /// sequence modes they must be equal.
+  /// @param exposure Desired exposure time in microseconds
+  inline void setExposure(const uint32_t exposure) { m_exposure = exposure; }
 
-  void setPeriod(uint32_t _period) { period = _period; }
-  inline uint32_t getPeriod() { return period; }
+  /// @brief Get the current exposure time for a pattern
+  /// @return Exposure time in microseconds
+  inline uint32_t getExposure() { return m_exposure; }
+
+  /// @brief Set the frame period. In external video input pattern this must
+  /// match the pattern exposure time.
+  /// @param period Frame period in microseconds
+  inline void setPeriod(const uint32_t period) { m_period = period; }
+
+  /// @brief Get the current frame period
+  /// @return Frame period in microseconds
+  inline uint32_t getPeriod() { return m_period; }
 
  private:
-  size_t patternNum;
-  Pattern patterns[maxPatterns];
-  uint32_t exposure;
-  uint32_t period;
+  /// @brief Number of stored pattern data
+  size_t m_patternNum;
+
+  /// @brief Array containing the pattern data
+  Pattern m_patterns[maxPatterns];
+
+  /// @brief Pattern exposure time(us)
+  uint32_t m_exposure;
+
+  /// @brief Frame period(us)
+  uint32_t m_period;
 };
 
+/// @brief Variable exposure pattern data
 struct VarExpPat {
+  /// @brief Pattern data
   Pattern pattern;
+  /// @brief Exposure time(us)
   uint32_t exposure;
+  /// @brief Frame period(us)
   uint32_t period;
 
   VarExpPat() : pattern(), exposure{0}, period{0} {}
@@ -209,12 +262,26 @@ struct VarExpPat {
   }
 };
 
+/// @brief Sequence containing variable exposure patterns
 struct VarExpPatSequence {
  public:
   VarExpPatSequence() : varExpPatNum(0) {}
 
-  void clear() { varExpPatNum = 0; }
+  /// @brief Clear the pattern sequence data
+  inline void clear() { varExpPatNum = 0; }
 
+  /// @brief Add pattern to the sequence
+  /// @tparam PatternType enum defining patterns of which bitDepth to use
+  /// @param triggerType Type of trigger for the pattern
+  /// @param patternType Which pattern type to use
+  /// @param bitDepth Bit depth of pattern
+  /// @param ledSelect Which LEDs to activate
+  /// @param invertPattern Invert pattern on 1
+  /// @param insertBlack Insert black-fill after current pattern. Requires 230us
+  /// before the start of next pattern.
+  /// @param triggerOutPrevious Behavior of TriggerOut1. This setting cannot be
+  /// combined with the black-fill pattern
+  /// @return True on success
   template <typename PatternType>
   bool addVarExpPat(uint32_t exposure, uint32_t period,
                     Pattern::TriggerType triggerType, PatternType patternType,
@@ -239,17 +306,26 @@ struct VarExpPatSequence {
     return true;
   }
 
-  void addVarExpPat(VarExpPat& varExpPat)
+  /// @brief Add variable exposure pattern to sequence
+  /// @param varExpPat Variable exposure pattern to add
+  inline void addVarExpPat(VarExpPat& varExpPat)
   {
     varExpPats[varExpPatNum++] = varExpPat;
   }
 
+  /// @brief Number of stored variable exposure pattern data
+  /// @return Number of patterns
   inline size_t getVarExpPatNum() { return varExpPatNum; }
 
+  /// @brief Get the variable exposure pattern at the index
+  /// @param index Index of pattern
+  /// @return Variable exposure pattern data
   inline VarExpPat& getVarExpPat(size_t index) { return varExpPats[index]; }
 
  private:
+  /// @brief Number of stored variable exposure pattern data
   size_t varExpPatNum;
+  /// @brief Array storing variable exposure pattern data
   VarExpPat varExpPats[maxVarExpPats];
 };
 };  // namespace multi350

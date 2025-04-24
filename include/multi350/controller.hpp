@@ -1,6 +1,5 @@
 #pragma once
 // SPDX-License-Identifier: BSD-3-Clause
-#include <cstdint>
 #include <vector>
 
 #include "dlpc350.hpp"
@@ -10,13 +9,12 @@
 #include "usb.hpp"
 
 namespace multi350 {
-
 /// @brief Number of max possible retries on configuration attempt
-constexpr unsigned int maxRetries = 10;
+inline constexpr unsigned int maxRetries = 10;
 
 /// @brief Contains Projector status and index information
 struct Projector {
-  unsigned int index;
+  unsigned int index;  // index to access usb device list
   bool controlled{true};
   PowerMode powerMode;
   LEDCurrent ledCurrent;
@@ -35,10 +33,11 @@ struct Projector {
         patternStatus(PatternStatus::STOP)
   {
   }
-  Projector(unsigned int _index, PowerMode _powerMode = PowerMode::NORMAL,
-            LEDCurrent _ledCurrent = LEDCurrent{0},
-            DisplayMode _displayMode = DisplayMode::VIDEO,
-            PatternStatus _psStatus = PatternStatus::STOP)
+  Projector(const unsigned int _index,
+            const PowerMode _powerMode = PowerMode::NORMAL,
+            const LEDCurrent _ledCurrent = LEDCurrent{0},
+            const DisplayMode _displayMode = DisplayMode::VIDEO,
+            const PatternStatus _psStatus = PatternStatus::STOP)
       : index{_index},
         powerMode{_powerMode},
         ledCurrent{_ledCurrent},
@@ -78,7 +77,7 @@ struct Controller {
   /// @brief Get reference to the stored projector object
   /// @param index Index to projector
   /// @return Reference to the Projector
-  Projector& getProjector(unsigned int index);
+  Projector& getProjector(const unsigned int index);
 
   // TODO: change namespace for dlpc350 on cmake
   // TODO: adjust control flag check
@@ -88,7 +87,7 @@ struct Controller {
 
   /// @brief Control a single projector
   /// @param index index of projector to control
-  void controlSingle(unsigned int index);
+  void controlSingle(const unsigned int index);
 
   // TODO: change to a swap to match imgui function?
   bool updateIndices(const std::vector<unsigned int>& indices);
@@ -103,18 +102,18 @@ struct Controller {
   /// @brief Set power mode on projectors. Waits 2000ms to finish switching.
   /// @param powerMode STANDBY(true) / NORMAL(false)
   /// @return True on success
-  bool setPowerMode(PowerMode powerMode);
+  bool setPowerMode(const PowerMode powerMode);
 
   /// @brief Set power mode for a single projector. Waits 2000ms to finish
   /// @param index index of projector
   /// @param powerMode STANDBY(true) / NORMAL(false)
   /// @return True on success
-  bool setPowerMode(unsigned int index, PowerMode powerMode);
+  bool setPowerMode(const unsigned int index, const PowerMode powerMode);
 
   /// @brief Start test pattern on controlled projectors
   /// @param testType type of test pattern
   /// @return True on success
-  bool startTestPattern(TestPattern testType);
+  bool startTestPattern(const TestPattern testType);
 
   /// @brief Stop test pattern and set parallel 24bit as input source
   /// @return True on success
@@ -123,7 +122,7 @@ struct Controller {
   /// @brief Set display mode on all controlled projectors
   /// @param displayMode PATTERN(true) / VIDEO(false)
   /// @return True on success
-  bool setDisplayMode(DisplayMode displayMode);
+  bool setDisplayMode(const DisplayMode displayMode);
 
   /// @brief Start video mode on all controlled projectors
   /// @return True on success
@@ -159,7 +158,7 @@ struct Controller {
   /// index on usb class)
   /// @param ledCurrent LEDCurrent object containing current values
   /// @return True on success
-  bool setLEDCurrent(unsigned int index, LEDCurrent ledCurrent);
+  bool setLEDCurrent(const unsigned int index, const LEDCurrent ledCurrent);
 
   /// @brief Prints all list of connected devices
   inline void printDevices() { USB::printDevices(); }
@@ -167,20 +166,18 @@ struct Controller {
   /// @brief Prints all the status of connected devices
   void printStatus();
 
-  // void showVersion();
-
  protected:
   /// @brief Set which DLPC350 device is currently getting controlled by the
   /// HIDAPI library. Only needed for manually configuring a single specific
   /// projector.
   /// @param index Index of the projector (Should be less than deviceNum())
   /// @return True on success
-  inline bool select(unsigned int index) { return USB::select(index); }
+  inline bool select(const unsigned int index) { return USB::select(index); }
 
   /// @brief Set display mode for a single projector.
   /// @param displayMode PATTERN(true) / VIDEO(false)
   /// @return True on success
-  bool setDisplayModeSingle(DisplayMode displayMode);
+  bool setDisplayModeSingle(const DisplayMode displayMode);
 
   /// @brief Start pattern sequence on a single projector. Should create
   /// necessary pattern sequence object and add patterns prior to calling this
@@ -206,7 +203,7 @@ struct Controller {
   /// validated before calling this function.
   /// @param psStatus PatternStatus object indicating start/stop
   /// @return True on success
-  bool setPatternStatusSingle(PatternStatus psStatus);
+  bool setPatternStatusSingle(const PatternStatus psStatus);
 
   /// @brief Contains information of connected projectors and the corresponding
   /// index for the USB interface.
