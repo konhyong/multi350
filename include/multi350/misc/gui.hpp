@@ -12,20 +12,21 @@ using namespace al;
 
 /// @brief multi350 with GUI for use with allolib library.
 /// https://github.com/AlloSphere-Research-Group/allolib
-struct Multi350GUI {
+class Multi350GUI {
  public:
   /// @brief Initialize the gui and setup parameters and presets
   /// @return True on success
   bool init()
   {
-    preset_currents << proj0_red << proj0_green << proj0_blue << proj1_red
-                    << proj1_green << proj1_blue << proj2_red << proj2_green
-                    << proj2_blue << proj3_red << proj3_green << proj3_blue;
-    preset_currents.recallPresetSynchronous("currents");
+    m_presetCurrents << m_proj0Red << m_proj0Green << m_proj0Blue << m_proj1Red
+                     << m_proj1Green << m_proj1Blue << m_proj2Red
+                     << m_proj2Green << m_proj2Blue << m_proj3Red
+                     << m_proj3Green << m_proj3Blue;
+    m_presetCurrents.recallPresetSynchronous("currents");
 
-    preset_projectors << proj0_index << proj1_index << proj2_index
-                      << proj3_index;
-    preset_projectors.recallPresetSynchronous("projectors");
+    m_presetProjectors << m_proj0Index << m_proj1Index << m_proj2Index
+                       << m_proj3Index;
+    m_presetProjectors.recallPresetSynchronous("projectors");
 
     if (!controller.init()) {
       std::cerr << "Failed to initialize multi350 controller" << std::endl;
@@ -51,46 +52,46 @@ struct Multi350GUI {
   {
     ImGui::Begin("MULTI350 Control");
 
-    ParameterGUI::draw(&device_list);
+    ParameterGUI::draw(&m_deviceList);
     ImGui::SameLine();
-    ParameterGUI::draw(&device_open);
+    ParameterGUI::draw(&m_deviceOpen);
     ImGui::SameLine();
-    ParameterGUI::draw(&device_close);
+    ParameterGUI::draw(&m_deviceClose);
 
-    if (!usb_names.empty() &&
+    if (!m_usbNames.empty() &&
         ImGui::CollapsingHeader("Adjust Projector Order",
                                 ImGuiTreeNodeFlags_CollapsingHeader)) {
       ImGui::Indent();
-      ParameterGUI::draw(&apply_indices);
-      ImGui::SameLine();
-      ParameterGUI::draw(&save_indices);
 
-      ImGui::NewLine();
-
-      for (int idx = 0; idx < usb_names.size(); ++idx) {
+      for (int idx = 0; idx < m_usbNames.size(); ++idx) {
         ImGui::Text("Proj %d: ", idx);
         ImGui::SameLine();
-        ImGui::Selectable(usb_names[idx].c_str(), true, 0, ImVec2(30, 15));
+        ImGui::Selectable(m_usbNames[idx].c_str(), true, 0, ImVec2(30, 15));
 
         if (ImGui::IsItemActive() && !ImGui::IsItemHovered()) {
           int next_idx = idx + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
-          if (next_idx >= 0 && next_idx < usb_names.size()) {
-            std::string temp_name(usb_names[idx]);
-            usb_names[idx] = usb_names[next_idx];
-            usb_names[next_idx] = temp_name;
-            int temp_idx(usb_idx[idx]);
-            usb_idx[idx] = usb_idx[next_idx];
-            usb_idx[next_idx] = temp_idx;
+          if (next_idx >= 0 && next_idx < m_usbNames.size()) {
+            std::string temp_name(m_usbNames[idx]);
+            m_usbNames[idx] = m_usbNames[next_idx];
+            m_usbNames[next_idx] = temp_name;
+            int temp_idx(m_projsIndex[idx]);
+            m_projsIndex[idx] = m_projsIndex[next_idx];
+            m_projsIndex[next_idx] = temp_idx;
             ImGui::ResetMouseDragDelta();
           }
         }
       }
+
+      ParameterGUI::draw(&m_applyIndices);
+      ImGui::SameLine();
+      ParameterGUI::draw(&m_saveIndices);
+
       ImGui::Unindent();
 
-      proj0_index.setNoCalls(usb_idx[0]);
-      proj1_index.setNoCalls(usb_idx[1]);
-      proj2_index.setNoCalls(usb_idx[2]);
-      proj3_index.setNoCalls(usb_idx[3]);
+      m_proj0Index.setNoCalls(m_projsIndex[0]);
+      m_proj1Index.setNoCalls(m_projsIndex[1]);
+      m_proj2Index.setNoCalls(m_projsIndex[2]);
+      m_proj3Index.setNoCalls(m_projsIndex[3]);
     }
 
     ImGui::NewLine();
@@ -105,101 +106,101 @@ struct Multi350GUI {
 
     int device_num = controller.deviceNum();
     if (device_num < 4) {
-      proj3_control.setHint("hide", true);
+      m_proj3Control.setHint("hide", true);
       if (device_num < 3) {
-        proj2_control.setHint("hide", true);
+        m_proj2Control.setHint("hide", true);
         if (device_num < 2) {
-          proj1_control.setHint("hide", true);
+          m_proj1Control.setHint("hide", true);
           if (device_num < 1) {
-            proj0_control.setHint("hide", true);
+            m_proj0Control.setHint("hide", true);
           }
           else {
-            proj0_control.setHint("hide", false);
+            m_proj0Control.setHint("hide", false);
           }
         }
         else {
-          proj1_control.setHint("hide", false);
+          m_proj1Control.setHint("hide", false);
         }
       }
       else {
-        proj2_control.setHint("hide", false);
+        m_proj2Control.setHint("hide", false);
       }
     }
     else {
-      proj3_control.setHint("hide", false);
-      proj2_control.setHint("hide", false);
-      proj1_control.setHint("hide", false);
-      proj0_control.setHint("hide", false);
+      m_proj3Control.setHint("hide", false);
+      m_proj2Control.setHint("hide", false);
+      m_proj1Control.setHint("hide", false);
+      m_proj0Control.setHint("hide", false);
     }
 
-    ParameterGUI::draw(&proj0_control);
+    ParameterGUI::draw(&m_proj0Control);
     ImGui::SameLine();
-    ParameterGUI::draw(&proj1_control);
+    ParameterGUI::draw(&m_proj1Control);
     ImGui::SameLine();
-    ParameterGUI::draw(&proj2_control);
+    ParameterGUI::draw(&m_proj2Control);
     ImGui::SameLine();
-    ParameterGUI::draw(&proj3_control);
+    ParameterGUI::draw(&m_proj3Control);
 
     ImGui::NewLine();
 
-    ParameterGUI::draw(&test_start);
+    ParameterGUI::draw(&m_testStart);
     ImGui::SameLine();
-    ParameterGUI::draw(&test_stop);
-
-    ParameterGUI::draw(&reset);
-    ImGui::SameLine();
-    ParameterGUI::draw(&print_status);
+    ParameterGUI::draw(&m_testStop);
 
     ImGui::NewLine();
 
-    ParameterGUI::draw(&power_normal);
+    ParameterGUI::draw(&m_powerNormal);
     ImGui::SameLine();
-    ParameterGUI::draw(&power_standby);
+    ParameterGUI::draw(&m_powerStandby);
+    ImGui::SameLine();
+    ParameterGUI::draw(&m_reset);
+    ImGui::SameLine();
+    ParameterGUI::draw(&m_printStatus);
 
     ImGui::NewLine();
 
-    ParameterGUI::draw(&video_mode);
-    ImGui::SameLine();
-    ParameterGUI::draw(&varExpPat_start);
+    ParameterGUI::draw(&m_videoMode);
 
-    ImGui::RadioButton("8b", &patternSequenceIndex, 0);
+    ImGui::RadioButton("8b", &m_patternSequenceIndex, 0);
     ImGui::SameLine();
-    ImGui::RadioButton("7b", &patternSequenceIndex, 1);
+    ImGui::RadioButton("7b", &m_patternSequenceIndex, 1);
     ImGui::SameLine();
-    ImGui::RadioButton("4b", &patternSequenceIndex, 2);
+    ImGui::RadioButton("4b", &m_patternSequenceIndex, 2);
     ImGui::SameLine();
-    ImGui::RadioButton("2b", &patternSequenceIndex, 3);
+    ImGui::RadioButton("2b", &m_patternSequenceIndex, 3);
 
-    ParameterGUI::draw(&pattern_start);
+    ParameterGUI::draw(&m_patternStart);
     ImGui::SameLine();
-    ParameterGUI::draw(&pattern_stop);
+    ParameterGUI::draw(&m_varExpPatStart);
+    ImGui::SameLine();
+    ParameterGUI::draw(&m_patternStop);
 
     ImGui::NewLine();
 
-    ParameterGUI::draw(&apply_led);
+    ParameterGUI::draw(&m_LEDApply);
 
     if (ImGui::CollapsingHeader("LED Currents",
                                 ImGuiTreeNodeFlags_CollapsingHeader)) {
       ImGui::Indent();
-      ParameterGUI::draw(&proj0_red);
-      ParameterGUI::draw(&proj0_green);
-      ParameterGUI::draw(&proj0_blue);
+      ParameterGUI::draw(&m_proj0Red);
+      ParameterGUI::draw(&m_proj0Green);
+      ParameterGUI::draw(&m_proj0Blue);
       ImGui::NewLine();
-      ParameterGUI::draw(&proj1_red);
-      ParameterGUI::draw(&proj1_green);
-      ParameterGUI::draw(&proj1_blue);
+      ParameterGUI::draw(&m_proj1Red);
+      ParameterGUI::draw(&m_proj1Green);
+      ParameterGUI::draw(&m_proj1Blue);
       ImGui::NewLine();
-      ParameterGUI::draw(&proj2_red);
-      ParameterGUI::draw(&proj2_green);
-      ParameterGUI::draw(&proj2_blue);
+      ParameterGUI::draw(&m_proj2Red);
+      ParameterGUI::draw(&m_proj2Green);
+      ParameterGUI::draw(&m_proj2Blue);
       ImGui::NewLine();
-      ParameterGUI::draw(&proj3_red);
-      ParameterGUI::draw(&proj3_green);
-      ParameterGUI::draw(&proj3_blue);
+      ParameterGUI::draw(&m_proj3Red);
+      ParameterGUI::draw(&m_proj3Green);
+      ParameterGUI::draw(&m_proj3Blue);
 
       ImGui::NewLine();
 
-      ParameterGUI::draw(&save_led);
+      ParameterGUI::draw(&m_LEDSave);
       ImGui::Unindent();
     }
     ImGui::End();
@@ -208,97 +209,99 @@ struct Multi350GUI {
   /// @brief Set up the parameter callbacks
   void setupCallbacks()
   {
-    device_list.registerChangeCallback(
+    m_deviceList.registerChangeCallback(
         [&](float value) { controller.printDevices(); });
 
-    device_open.registerChangeCallback([&](float value) { controller.open(); });
+    m_deviceOpen.registerChangeCallback(
+        [&](float value) { controller.open(); });
 
-    reset.registerChangeCallback(
+    m_reset.registerChangeCallback(
         [&](float value) { controller.softwareReset(); });
 
-    print_status.registerChangeCallback([&](float value) {
+    m_printStatus.registerChangeCallback([&](float value) {
       controller.updateStatus();
       controller.printStatus();
     });
 
-    test_start.registerChangeCallback([&](float value) {
+    m_testStart.registerChangeCallback([&](float value) {
       controller.startTestPattern(multi350::TestPattern::COLOR_BARS);
     });
 
-    test_stop.registerChangeCallback(
+    m_testStop.registerChangeCallback(
         [&](float value) { controller.stopTestPattern(); });
 
-    apply_led.registerChangeCallback([&](float value) {
+    m_LEDApply.registerChangeCallback([&](float value) {
       std::vector<multi350::LEDCurrent> currents;
-      currents.emplace_back(static_cast<uint8_t>(proj0_red.get()),
-                            static_cast<uint8_t>(proj0_green.get()),
-                            static_cast<uint8_t>(proj0_blue.get()));
-      currents.emplace_back(static_cast<uint8_t>(proj1_red.get()),
-                            static_cast<uint8_t>(proj1_green.get()),
-                            static_cast<uint8_t>(proj1_blue.get()));
-      currents.emplace_back(static_cast<uint8_t>(proj2_red.get()),
-                            static_cast<uint8_t>(proj2_green.get()),
-                            static_cast<uint8_t>(proj2_blue.get()));
-      currents.emplace_back(static_cast<uint8_t>(proj3_red.get()),
-                            static_cast<uint8_t>(proj3_green.get()),
-                            static_cast<uint8_t>(proj3_blue.get()));
+      currents.emplace_back(static_cast<uint8_t>(m_proj0Red.get()),
+                            static_cast<uint8_t>(m_proj0Green.get()),
+                            static_cast<uint8_t>(m_proj0Blue.get()));
+      currents.emplace_back(static_cast<uint8_t>(m_proj1Red.get()),
+                            static_cast<uint8_t>(m_proj1Green.get()),
+                            static_cast<uint8_t>(m_proj1Blue.get()));
+      currents.emplace_back(static_cast<uint8_t>(m_proj2Red.get()),
+                            static_cast<uint8_t>(m_proj2Green.get()),
+                            static_cast<uint8_t>(m_proj2Blue.get()));
+      currents.emplace_back(static_cast<uint8_t>(m_proj3Red.get()),
+                            static_cast<uint8_t>(m_proj3Green.get()),
+                            static_cast<uint8_t>(m_proj3Blue.get()));
 
       controller.setLEDCurrent(currents);
     });
 
-    save_led.registerChangeCallback(
-        [&](float value) { preset_currents.storePreset("currents"); });
+    m_LEDSave.registerChangeCallback(
+        [&](float value) { m_presetCurrents.storePreset("currents"); });
 
-    varExpPat_start.registerChangeCallback([&](float value) {
-      controller.startVarExpPatSequence(varExpPatSequences);
+    m_varExpPatStart.registerChangeCallback([&](float value) {
+      controller.startVarExpPatSequence(m_varExpPatSequences);
     });
 
-    pattern_start.registerChangeCallback([&](float value) {
-      controller.startPatternSequence(patternSequences[patternSequenceIndex]);
+    m_patternStart.registerChangeCallback([&](float value) {
+      controller.startPatternSequence(
+          m_patternSequences[m_patternSequenceIndex]);
     });
 
-    pattern_stop.registerChangeCallback(
+    m_patternStop.registerChangeCallback(
         [&](float value) { controller.stopPatternSequence(); });
 
-    video_mode.registerChangeCallback(
+    m_videoMode.registerChangeCallback(
         [&](float value) { controller.startVideoMode(); });
 
-    device_close.registerChangeCallback(
+    m_deviceClose.registerChangeCallback(
         [&](float value) { controller.close(); });
 
-    proj0_control.registerChangeCallback([&](float value) {
+    m_proj0Control.registerChangeCallback([&](float value) {
       auto& projector = controller.getProjector(0);
       projector.controlled = value;
     });
 
-    proj1_control.registerChangeCallback([&](float value) {
+    m_proj1Control.registerChangeCallback([&](float value) {
       auto& projector = controller.getProjector(1);
       projector.controlled = value;
     });
 
-    proj2_control.registerChangeCallback([&](float value) {
+    m_proj2Control.registerChangeCallback([&](float value) {
       auto& projector = controller.getProjector(2);
       projector.controlled = value;
     });
 
-    proj3_control.registerChangeCallback([&](float value) {
+    m_proj3Control.registerChangeCallback([&](float value) {
       auto& projector = controller.getProjector(3);
       projector.controlled = value;
     });
 
-    power_normal.registerChangeCallback([&](float value) {
+    m_powerNormal.registerChangeCallback([&](float value) {
       controller.setPowerMode(multi350::PowerMode::NORMAL);
     });
 
-    power_standby.registerChangeCallback([&](float value) {
+    m_powerStandby.registerChangeCallback([&](float value) {
       controller.setPowerMode(multi350::PowerMode::STANDBY);
     });
 
-    apply_indices.registerChangeCallback(
-        [&](float value) { controller.updateIndices(usb_idx); });
+    m_applyIndices.registerChangeCallback(
+        [&](float value) { controller.updateIndices(m_projsIndex); });
 
-    save_indices.registerChangeCallback(
-        [&](float value) { preset_projectors.storePreset("projectors"); });
+    m_saveIndices.registerChangeCallback(
+        [&](float value) { m_presetProjectors.storePreset("projectors"); });
   }
 
   /// @brief Set up the preset pattern sequences
@@ -306,62 +309,62 @@ struct Multi350GUI {
   {
     using namespace multi350;
     // TODO: check if insert black is needed on final pattern
-    patternSequences[0].addPattern<Pattern::Pattern8bit>(
+    m_patternSequences[0].addPattern<Pattern::Pattern8bit>(
         Pattern::TriggerType::EXTERNAL_POSITIVE,
         Pattern::Pattern8bit::G7G6G5G4G3G2G1G0, 8, Pattern::LEDSelect::GREEN);
-    patternSequences[0].addPattern<Pattern::Pattern8bit>(
+    m_patternSequences[0].addPattern<Pattern::Pattern8bit>(
         Pattern::TriggerType::NO_TRIGGER,
         Pattern::Pattern8bit::R7R6R5R4R3R2R1R0, 8, Pattern::LEDSelect::RED);
-    patternSequences[0].addPattern<Pattern::Pattern8bit>(
+    m_patternSequences[0].addPattern<Pattern::Pattern8bit>(
         Pattern::TriggerType::NO_TRIGGER,
         Pattern::Pattern8bit::B7B6B5B4B3B2B1B0, 8, Pattern::LEDSelect::BLUE,
         false, true, false);
-    patternSequences[0].setExposure(8333);
-    patternSequences[0].setPeriod(8333);
+    m_patternSequences[0].setExposure(8333);
+    m_patternSequences[0].setPeriod(8333);
 
-    patternSequences[1].addPattern<Pattern::Pattern7bit>(
+    m_patternSequences[1].addPattern<Pattern::Pattern7bit>(
         Pattern::TriggerType::EXTERNAL_POSITIVE,
         Pattern::Pattern7bit::G7G6G5G4G3G2G1, 7, Pattern::LEDSelect::GREEN);
-    patternSequences[1].addPattern<Pattern::Pattern7bit>(
+    m_patternSequences[1].addPattern<Pattern::Pattern7bit>(
         Pattern::TriggerType::NO_TRIGGER, Pattern::Pattern7bit::R7R6R5R4R3R2R1,
         7, Pattern::LEDSelect::RED);
-    patternSequences[1].addPattern<Pattern::Pattern7bit>(
+    m_patternSequences[1].addPattern<Pattern::Pattern7bit>(
         Pattern::TriggerType::NO_TRIGGER, Pattern::Pattern7bit::B7B6B5B4B3B2B1,
         7, Pattern::LEDSelect::BLUE, false, true, false);
-    patternSequences[1].setExposure(4500);
-    patternSequences[1].setPeriod(4500);
+    m_patternSequences[1].setExposure(4500);
+    m_patternSequences[1].setPeriod(4500);
 
-    patternSequences[2].addPattern<Pattern::Pattern4bit>(
+    m_patternSequences[2].addPattern<Pattern::Pattern4bit>(
         Pattern::TriggerType::EXTERNAL_POSITIVE, Pattern::Pattern4bit::G7G6G5G4,
         4, Pattern::LEDSelect::GREEN);
-    patternSequences[2].addPattern<Pattern::Pattern4bit>(
+    m_patternSequences[2].addPattern<Pattern::Pattern4bit>(
         Pattern::TriggerType::NO_TRIGGER, Pattern::Pattern4bit::R7R6R5R4, 4,
         Pattern::LEDSelect::RED);
-    patternSequences[2].addPattern<Pattern::Pattern4bit>(
+    m_patternSequences[2].addPattern<Pattern::Pattern4bit>(
         Pattern::TriggerType::NO_TRIGGER, Pattern::Pattern4bit::B7B6B5B4, 4,
         Pattern::LEDSelect::BLUE, false, true, false);
-    patternSequences[2].setExposure(1700);
-    patternSequences[2].setPeriod(1700);
+    m_patternSequences[2].setExposure(1700);
+    m_patternSequences[2].setPeriod(1700);
 
-    patternSequences[3].addPattern<Pattern::Pattern2bit>(
+    m_patternSequences[3].addPattern<Pattern::Pattern2bit>(
         Pattern::TriggerType::EXTERNAL_POSITIVE, Pattern::Pattern2bit::G7G6, 2,
         Pattern::LEDSelect::GREEN);
-    patternSequences[3].addPattern<Pattern::Pattern2bit>(
+    m_patternSequences[3].addPattern<Pattern::Pattern2bit>(
         Pattern::TriggerType::NO_TRIGGER, Pattern::Pattern2bit::R7R6, 2,
         Pattern::LEDSelect::RED);
-    patternSequences[3].addPattern<Pattern::Pattern2bit>(
+    m_patternSequences[3].addPattern<Pattern::Pattern2bit>(
         Pattern::TriggerType::NO_TRIGGER, Pattern::Pattern2bit::B7B6, 2,
         Pattern::LEDSelect::BLUE, false, true, false);
-    patternSequences[3].setExposure(700);
-    patternSequences[3].setPeriod(700);
+    m_patternSequences[3].setExposure(700);
+    m_patternSequences[3].setPeriod(700);
 
-    varExpPatSequences.addVarExpPat<Pattern::Pattern4bit>(
+    m_varExpPatSequences.addVarExpPat<Pattern::Pattern4bit>(
         1700, 1700, Pattern::TriggerType::EXTERNAL_POSITIVE,
         Pattern::Pattern4bit::G7G6G5G4, 4, Pattern::LEDSelect::GREEN);
-    varExpPatSequences.addVarExpPat<Pattern::Pattern4bit>(
+    m_varExpPatSequences.addVarExpPat<Pattern::Pattern4bit>(
         4250, 4250, Pattern::TriggerType::NO_TRIGGER,
         Pattern::Pattern4bit::R7R6R5R4, 4, Pattern::LEDSelect::RED);
-    varExpPatSequences.addVarExpPat<Pattern::Pattern4bit>(
+    m_varExpPatSequences.addVarExpPat<Pattern::Pattern4bit>(
         1700, 1700, Pattern::TriggerType::NO_TRIGGER,
         Pattern::Pattern4bit::B7B6B5B4, 4, Pattern::LEDSelect::BLUE, false,
         true, false);
@@ -379,81 +382,81 @@ struct Multi350GUI {
     //   return;
     // }
 
-    usb_idx.push_back(proj0_index.get());
-    usb_idx.push_back(proj1_index.get());
-    usb_idx.push_back(proj2_index.get());
-    usb_idx.push_back(proj3_index.get());
+    m_projsIndex.push_back(m_proj0Index.get());
+    m_projsIndex.push_back(m_proj1Index.get());
+    m_projsIndex.push_back(m_proj2Index.get());
+    m_projsIndex.push_back(m_proj3Index.get());
 
     for (int i = 0; i < 4; ++i) {
-      usb_names.push_back("USB" + std::to_string(usb_idx[i]));
+      m_usbNames.push_back("USB" + std::to_string(m_projsIndex[i]));
     }
 
-    // multi350.updateIndices(usb_idx);
+    // multi350.updateIndices(m_projsIndex);
   }
 
  public:
   /// @brief Controller for multiple DLPC350 devices
   multi350::Controller controller;
 
- protected:
+ private:
   /// @brief Preset pattern sequences for 8, 7, 4, 2 bit depths
-  std::array<multi350::PatternSequence, 4> patternSequences;
+  std::array<multi350::PatternSequence, 4> m_patternSequences;
   /// @brief Index for the active pattern sequence
-  int patternSequenceIndex{0};
+  int m_patternSequenceIndex{0};
 
   /// @brief Preset variable exposure sequence
-  multi350::VarExpPatSequence varExpPatSequences;
+  multi350::VarExpPatSequence m_varExpPatSequences;
 
-  Trigger device_list{"device_list", "multi350"};
-  Trigger device_open{"device_open", "multi350"};
-  Trigger device_close{"device_close", "multi350"};
+  Trigger m_deviceList{"deviceList", "multi350"};
+  Trigger m_deviceOpen{"deviceOpen", "multi350"};
+  Trigger m_deviceClose{"deviceClose", "multi350"};
 
-  ParameterInt proj0_index{"proj0_index", "multi350", 0, 0, 3};
-  ParameterInt proj1_index{"proj1_index", "multi350", 1, 0, 3};
-  ParameterInt proj2_index{"proj2_index", "multi350", 2, 0, 3};
-  ParameterInt proj3_index{"proj3_index", "multi350", 3, 0, 3};
-  std::vector<unsigned int> usb_idx;
-  std::vector<std::string> usb_names;
+  ParameterInt m_proj0Index{"proj0_index", "multi350", 0, 0, 3};
+  ParameterInt m_proj1Index{"proj1_index", "multi350", 1, 0, 3};
+  ParameterInt m_proj2Index{"proj2_index", "multi350", 2, 0, 3};
+  ParameterInt m_proj3Index{"proj3_index", "multi350", 3, 0, 3};
+  std::vector<unsigned int> m_projsIndex;
+  std::vector<std::string> m_usbNames;
 
-  Trigger apply_indices{"apply_indices", "multi350"};
-  Trigger save_indices{"save_indices", "multi350"};
+  Trigger m_applyIndices{"applyIndex", "multi350"};
+  Trigger m_saveIndices{"saveIndex", "multi350"};
 
-  ParameterBool proj0_control{"proj0", "multi350", true};
-  ParameterBool proj1_control{"proj1", "multi350", true};
-  ParameterBool proj2_control{"proj2", "multi350", true};
-  ParameterBool proj3_control{"proj3", "multi350", true};
+  ParameterBool m_proj0Control{"proj0", "multi350", true};
+  ParameterBool m_proj1Control{"proj1", "multi350", true};
+  ParameterBool m_proj2Control{"proj2", "multi350", true};
+  ParameterBool m_proj3Control{"proj3", "multi350", true};
 
-  Trigger reset{"reset", "multi350"};
-  Trigger print_status{"print_status", "multi350"};
+  Trigger m_reset{"reset", "multi350"};
+  Trigger m_printStatus{"status", "multi350"};
 
-  Trigger test_start{"test_start", "multi350"};
-  Trigger test_stop{"test_stop", "multi350"};
+  Trigger m_testStart{"startTest", "multi350"};
+  Trigger m_testStop{"stopTest", "multi350"};
 
-  Trigger power_normal{"power_normal", "multi350"};
-  Trigger power_standby{"power_standby", "multi350"};
+  Trigger m_powerNormal{"normal", "multi350"};
+  Trigger m_powerStandby{"standby", "multi350"};
 
-  Trigger video_mode{"video_mode", "multi350"};
-  Trigger varExpPat_start{"varExpPat_start", "multi350"};
-  Trigger pattern_start{"pattern_start", "multi350"};
-  Trigger pattern_stop{"pattern_stop", "multi350"};
+  Trigger m_videoMode{"videoMode", "multi350"};
+  Trigger m_varExpPatStart{"varExpPat", "multi350"};
+  Trigger m_patternStart{"pattern", "multi350"};
+  Trigger m_patternStop{"stop", "multi350"};
 
-  Trigger apply_led{"apply_led", "multi350"};
-  Trigger save_led{"save_led", "multi350"};
+  Trigger m_LEDApply{"applyLED", "multi350"};
+  Trigger m_LEDSave{"saveLED", "multi350"};
 
-  ParameterInt proj0_red{"proj0_red", "multi350", 40, 0, 255};
-  ParameterInt proj0_green{"proj0_green", "multi350", 90, 0, 255};
-  ParameterInt proj0_blue{"proj0_blue", "multi350", 255, 0, 255};
-  ParameterInt proj1_red{"proj1_red", "multi350", 40, 0, 255};
-  ParameterInt proj1_green{"proj1_green", "multi350", 90, 0, 255};
-  ParameterInt proj1_blue{"proj1_blue", "multi350", 255, 0, 255};
-  ParameterInt proj2_red{"proj2_red", "multi350", 40, 0, 255};
-  ParameterInt proj2_green{"proj2_green", "multi350", 90, 0, 255};
-  ParameterInt proj2_blue{"proj2_blue", "multi350", 255, 0, 255};
-  ParameterInt proj3_red{"proj3_red", "multi350", 40, 0, 255};
-  ParameterInt proj3_green{"proj3_green", "multi350", 90, 0, 255};
-  ParameterInt proj3_blue{"proj3_blue", "multi350", 255, 0, 255};
+  ParameterInt m_proj0Red{"proj0_red", "multi350", 40, 0, 255};
+  ParameterInt m_proj0Green{"proj0_green", "multi350", 90, 0, 255};
+  ParameterInt m_proj0Blue{"proj0_blue", "multi350", 255, 0, 255};
+  ParameterInt m_proj1Red{"proj1_red", "multi350", 40, 0, 255};
+  ParameterInt m_proj1Green{"proj1_green", "multi350", 90, 0, 255};
+  ParameterInt m_proj1Blue{"proj1_blue", "multi350", 255, 0, 255};
+  ParameterInt m_proj2Red{"proj2_red", "multi350", 40, 0, 255};
+  ParameterInt m_proj2Green{"proj2_green", "multi350", 90, 0, 255};
+  ParameterInt m_proj2Blue{"proj2_blue", "multi350", 255, 0, 255};
+  ParameterInt m_proj3Red{"proj3_red", "multi350", 40, 0, 255};
+  ParameterInt m_proj3Green{"proj3_green", "multi350", 90, 0, 255};
+  ParameterInt m_proj3Blue{"proj3_blue", "multi350", 255, 0, 255};
 
   // TODO: change file to std::file to handle paths
-  PresetHandler preset_currents{"presets/currents"};
-  PresetHandler preset_projectors{"presets/projectors"};
+  PresetHandler m_presetCurrents{"presets/currents"};
+  PresetHandler m_presetProjectors{"presets/projectors"};
 };

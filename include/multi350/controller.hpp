@@ -10,7 +10,7 @@
 
 namespace multi350 {
 /// @brief Number of max possible retries on configuration attempt
-inline constexpr unsigned int maxRetries = 10;
+inline constexpr unsigned int g_maxRetries = 10;
 
 /// @brief Contains Projector status and index information
 struct Projector {
@@ -47,7 +47,8 @@ struct Projector {
   }
 };
 
-struct Controller {
+class Controller {
+ public:
   /// @brief Initialize the Controller
   /// @return True on success
   inline bool init() { return USB::init(); }
@@ -166,7 +167,7 @@ struct Controller {
   /// @brief Prints all the status of connected devices
   void printStatus();
 
- protected:
+ private:
   /// @brief Set which DLPC350 device is currently getting controlled by the
   /// HIDAPI library. Only needed for manually configuring a single specific
   /// projector.
@@ -205,9 +206,10 @@ struct Controller {
   /// @return True on success
   bool setPatternStatusSingle(const PatternStatus psStatus);
 
+ private:
   /// @brief Contains information of connected projectors and the corresponding
   /// index for the USB interface.
-  std::vector<Projector> projectors;
+  std::vector<Projector> m_projectors;
 };
 
 };  // namespace multi350

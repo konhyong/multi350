@@ -14,26 +14,26 @@ namespace USB {
 using Buffer = std::unique_ptr<uint8_t, std::default_delete<uint8_t[]>>;
 
 /// @brief Vendor ID for DLPC350
-inline constexpr uint16_t vendorId = 0x0451;
+inline constexpr uint16_t g_vendorId = 0x0451;
 
 /// @brief Product ID for DLPC350
-inline constexpr uint16_t productId = 0x6401;
+inline constexpr uint16_t g_productId = 0x6401;
 
 /// @brief Current HID device used for transactions
-extern hid_device* device;
+extern hid_device* g_device;
 
 /// @brief All DLPC350 devices connected via HID
-extern std::vector<hid_device*> devices;
+extern std::vector<hid_device*> g_devices;
 
 /// @brief Timeout duration for hid read in milliseconds
-inline constexpr int32_t readTimeout = 2000;
+inline constexpr int32_t g_readTimeout = 2000;
 
 /// @brief Maximum packet size in bytes for a single command
-inline constexpr size_t packetSize = 64;
+inline constexpr size_t g_packetSize = 64;
 
 /// @brief In/Out buffers equal to HID endpoint size + 1. First byte is for
 /// Windows internal use and it is always 0
-inline constexpr size_t bufferSize = packetSize + 1;
+inline constexpr size_t g_bufferSize = g_packetSize + 1;
 
 /// @brief Initialize the HID API for USB transactions
 /// @return True on success

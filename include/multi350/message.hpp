@@ -11,9 +11,9 @@ namespace multi350 {
 /// @brief Internal settings for USB messages
 namespace internal {
 /// @brief Maximum data size for each command in bytes
-inline constexpr size_t maxMessageDataSize = 512;
+inline constexpr size_t g_maxMessageDataSize = 512;
 /// @brief Enable verbose logging for debug purposes
-inline constexpr bool verbose = false;
+inline constexpr bool g_verbose = false;
 };  // namespace internal
 
 /// @brief Message data handler
@@ -85,7 +85,7 @@ struct Message {
     /// @brief Command bytes (CMD2 + CMD3)
     uint16_t command;
     /// @brief Array containing data packet
-    uint8_t data[internal::maxMessageDataSize];
+    uint8_t data[internal::g_maxMessageDataSize];
   };
 };
 
@@ -102,7 +102,7 @@ extern inline std::unique_ptr<Message> read()
 
   auto ret =
       std::unique_ptr<Message>(new Message(), std::default_delete<Message>());
-  memcpy(ret.get(), received.get(), USB::bufferSize);
+  memcpy(ret.get(), received.get(), USB::g_bufferSize);
 
   return ret;
 }
@@ -114,12 +114,12 @@ extern inline int32_t write(const Message& msg)
 {
   uint16_t headerBytes =
       sizeof(msg.flags) + sizeof(msg.sequence) + sizeof(msg.length);
-  uint16_t maxDataSize = USB::packetSize - headerBytes;
+  uint16_t maxDataSize = USB::g_packetSize - headerBytes;
   uint16_t totalWrittenBytes = 0;
   uint16_t writtenBytes = std::min(msg.length, maxDataSize);
 
-  USB::Buffer buffer(new uint8_t[USB::bufferSize]);
-  memset(buffer.get(), 0, sizeof(uint8_t) * USB::bufferSize);
+  USB::Buffer buffer(new uint8_t[USB::g_bufferSize]);
+  memset(buffer.get(), 0, sizeof(uint8_t) * USB::g_bufferSize);
   memcpy(buffer.get() + 1, &msg,
          sizeof(uint8_t) * (headerBytes + writtenBytes));
   if (USB::write(buffer) == -1) {
@@ -131,7 +131,7 @@ extern inline int32_t write(const Message& msg)
 
   while (totalWrittenBytes < msg.length) {
     writtenBytes =
-        std::min(static_cast<uint16_t>(USB::packetSize),
+        std::min(static_cast<uint16_t>(USB::g_packetSize),
                  static_cast<uint16_t>(msg.length - totalWrittenBytes));
     memcpy(buffer.get() + 1, &msg.data[totalWrittenBytes],
            sizeof(uint8_t) * writtenBytes);
@@ -157,7 +157,7 @@ extern MessageData<T> transact(const Message& msg)
 {
   int32_t result = write(msg);
 
-  if (internal::verbose) {
+  if (internal::g_verbose) {
     std::cout << "W(" << msg.length << "): ";
     for (int i = 0; i < msg.length; ++i) {
       std::cout << std::hex << std::setw(4)
@@ -184,10 +184,10 @@ extern MessageData<T> transact(const Message& msg)
       return nullptr;
     }
 
-    MessageData<T> ret(new T[USB::packetSize]);
-    memcpy(ret.get(), received->data, USB::packetSize);
+    MessageData<T> ret(new T[USB::g_packetSize]);
+    memcpy(ret.get(), received->data, USB::g_packetSize);
 
-    if (internal::verbose) {
+    if (internal::g_verbose) {
       std::cout << "R(" << received->length << "): ";
       for (int i = 0; i < received->length; ++i) {
         std::cout << std::hex << std::setw(4)

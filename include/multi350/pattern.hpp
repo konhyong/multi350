@@ -9,9 +9,9 @@
 namespace multi350 {
 
 /// @brief Maximum pattern entries stored in LUT
-inline constexpr size_t maxPatterns = 128;
+inline constexpr size_t g_maxPatterns = 128;
 /// @brief Maximum variable exposure pattern entries stored in LUT
-inline constexpr size_t maxVarExpPats = 1824;
+inline constexpr size_t g_maxVarExpPats = 1824;
 
 /// @brief Pattern data
 struct Pattern {
@@ -163,7 +163,7 @@ class PatternSequence {
   inline void clear() { m_patternNum = 0; }
 
   /// @brief Add pattern to the sequence
-  /// @tparam PatternType enum defining patterns of which bitDepth to use
+  /// @tparam PatternType Pattern definition based on bit depth
   /// @param triggerType Type of trigger for the pattern
   /// @param patternType Which pattern type to use
   /// @param bitDepth Bit depth of pattern
@@ -237,7 +237,7 @@ class PatternSequence {
   size_t m_patternNum;
 
   /// @brief Array containing the pattern data
-  Pattern m_patterns[maxPatterns];
+  Pattern m_patterns[g_maxPatterns];
 
   /// @brief Pattern exposure time(us)
   uint32_t m_exposure;
@@ -263,15 +263,17 @@ struct VarExpPat {
 };
 
 /// @brief Sequence containing variable exposure patterns
-struct VarExpPatSequence {
+class VarExpPatSequence {
  public:
-  VarExpPatSequence() : varExpPatNum(0) {}
+  VarExpPatSequence() : m_varExpPatNum(0) {}
 
   /// @brief Clear the pattern sequence data
-  inline void clear() { varExpPatNum = 0; }
+  inline void clear() { m_varExpPatNum = 0; }
 
-  /// @brief Add pattern to the sequence
-  /// @tparam PatternType enum defining patterns of which bitDepth to use
+  /// @brief Add variable exposure pattern to the sequence
+  /// @tparam PatternType Pattern definition based on bit depth
+  /// @param exposure Exposure time(us)
+  /// @param period Pattern period(us)
   /// @param triggerType Type of trigger for the pattern
   /// @param patternType Which pattern type to use
   /// @param bitDepth Bit depth of pattern
@@ -310,22 +312,22 @@ struct VarExpPatSequence {
   /// @param varExpPat Variable exposure pattern to add
   inline void addVarExpPat(VarExpPat& varExpPat)
   {
-    varExpPats[varExpPatNum++] = varExpPat;
+    m_varExpPats[m_varExpPatNum++] = varExpPat;
   }
 
   /// @brief Number of stored variable exposure pattern data
   /// @return Number of patterns
-  inline size_t getVarExpPatNum() { return varExpPatNum; }
+  inline size_t getVarExpPatNum() { return m_varExpPatNum; }
 
   /// @brief Get the variable exposure pattern at the index
   /// @param index Index of pattern
   /// @return Variable exposure pattern data
-  inline VarExpPat& getVarExpPat(size_t index) { return varExpPats[index]; }
+  inline VarExpPat& getVarExpPat(size_t index) { return m_varExpPats[index]; }
 
  private:
   /// @brief Number of stored variable exposure pattern data
-  size_t varExpPatNum;
+  size_t m_varExpPatNum;
   /// @brief Array storing variable exposure pattern data
-  VarExpPat varExpPats[maxVarExpPats];
+  VarExpPat m_varExpPats[g_maxVarExpPats];
 };
 };  // namespace multi350

@@ -6,8 +6,8 @@
 namespace multi350 {
 namespace USB {
 
-hid_device* device = nullptr;
-std::vector<hid_device*> devices;
+hid_device* g_device = nullptr;
+std::vector<hid_device*> g_devices;
 
 inline bool init() { return (hid_init() == 0); }
 
@@ -15,29 +15,29 @@ inline bool exit() { return (hid_exit() == 0); }
 
 inline bool open()
 {
-  if (!devices.empty()) close();
+  if (!g_devices.empty()) close();
 
   hid_device_info* hid_info;
-  hid_info = hid_enumerate(vendorId, productId);
+  hid_info = hid_enumerate(g_vendorId, g_productId);
   if (!hid_info) {
     return false;
   }
 
   while (hid_info) {
     if (hid_info->interface_number == 0) {
-      device = hid_open_path(hid_info->path);
+      g_device = hid_open_path(hid_info->path);
 
-      if (!device) {
+      if (!g_device) {
         std::wcerr << "[HID] Failed to open device: " << hid_info->serial_number
                    << std::endl;
         close();
         return false;
       }
 
-      devices.push_back(device);
+      g_devices.push_back(g_device);
     }
     hid_info = hid_info->next;
-    device = nullptr;  // reset to default
+    g_device = nullptr;  // reset to default
   }
 
   return true;
@@ -45,32 +45,32 @@ inline bool open()
 
 inline void close()
 {
-  for (auto* handle : devices) {
+  for (auto* handle : g_devices) {
     hid_close(handle);
   }
-  devices.clear();
-  device = nullptr;
+  g_devices.clear();
+  g_device = nullptr;
 }
 
-inline bool isConnected() { return !devices.empty(); }
+inline bool isConnected() { return !g_devices.empty(); }
 
-inline unsigned int deviceNum() { return devices.size(); }
+inline unsigned int deviceNum() { return g_devices.size(); }
 
 inline bool select(const unsigned int index)
 {
-  if (index >= devices.size()) {
+  if (index >= g_devices.size()) {
     std::cerr << "Unable to select device " << index << std::endl;
     return false;
   }
 
-  device = devices[index];
+  g_device = g_devices[index];
   return true;
 }
 
 inline void printDevices()
 {
   struct hid_device_info* hid_info;
-  hid_info = hid_enumerate(vendorId, productId);
+  hid_info = hid_enumerate(g_vendorId, g_productId);
   std::cout << "[Device List]" << std::endl;
   while (hid_info) {
     if (hid_info->interface_number == 0) {
@@ -88,14 +88,14 @@ inline Buffer read()
 {
   if (!isConnected()) return nullptr;
 
-  if (!device) {
+  if (!g_device) {
     std::cerr << "Device not selected" << std::endl;
     return nullptr;
   }
 
-  Buffer ret(new uint8_t[bufferSize]);
+  Buffer ret(new uint8_t[g_bufferSize]);
   int32_t readBytes =
-      hid_read_timeout(device, ret.get(), bufferSize, readTimeout);
+      hid_read_timeout(g_device, ret.get(), g_bufferSize, g_readTimeout);
 
   if (readBytes == -1) {
     std::cerr << "USB Read failed" << std::endl;
@@ -110,12 +110,12 @@ inline int32_t write(const Buffer& data)
 {
   if (!isConnected()) return -1;
 
-  if (!device) {
+  if (!g_device) {
     std::cerr << "Device not selected" << std::endl;
     return -1;
   }
 
-  int32_t writtenBytes = hid_write(device, data.get(), bufferSize);
+  int32_t writtenBytes = hid_write(g_device, data.get(), g_bufferSize);
 
   if (writtenBytes == -1) {
     std::cerr << "USB Write failed" << std::endl;
