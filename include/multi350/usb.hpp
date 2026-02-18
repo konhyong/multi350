@@ -1,5 +1,6 @@
-#pragma once
+// SPDX-FileCopyrightText: 2025 Kon Hyong Kim <konhyong@gmail.com>
 // SPDX-License-Identifier: BSD-3-Clause
+#pragma once
 #include <cstdint>
 #include <memory>
 #include <vector>
