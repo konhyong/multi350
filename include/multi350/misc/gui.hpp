@@ -1,6 +1,7 @@
 #pragma once
 // SPDX-License-Identifier: BSD-3-Clause
 #include <array>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -22,7 +23,9 @@ class Multi350GUI {
                      << m_proj1Green << m_proj1Blue << m_proj2Red
                      << m_proj2Green << m_proj2Blue << m_proj3Red
                      << m_proj3Green << m_proj3Blue;
+    m_LEDpresets = m_presetCurrents.availablePresets();
     m_presetCurrents.recallPresetSynchronous("currents");
+    m_LEDpresetIdx = m_presetCurrents.getCurrentPresetIndex();
 
     m_presetProjectors << m_proj0Index << m_proj1Index << m_proj2Index
                        << m_proj3Index;
@@ -177,7 +180,24 @@ class Multi350GUI {
 
     ImGui::NewLine();
 
-    ParameterGUI::draw(&m_LEDApply);
+    if (ImGui::BeginCombo("LED Presets", m_LEDpresets[m_LEDpresetIdx].c_str(),
+                          ImGuiComboFlags_None)) {
+      for (auto& preset : m_LEDpresets) {
+        const bool isSelected = (m_LEDpresetIdx == preset.first);
+        if (ImGui::Selectable(preset.second.c_str(), isSelected)) {
+          m_LEDpresetIdx = preset.first;
+        }
+
+        if (isSelected) ImGui::SetItemDefaultFocus();
+      }
+      ImGui::EndCombo();
+    }
+
+    ParameterGUI::draw(&m_LEDload);
+    ImGui::SameLine();
+    ParameterGUI::draw(&m_LEDsave);
+    ImGui::SameLine();
+    ParameterGUI::draw(&m_LEDapply);
 
     if (ImGui::CollapsingHeader("LED Currents",
                                 ImGuiTreeNodeFlags_CollapsingHeader)) {
@@ -198,9 +218,6 @@ class Multi350GUI {
       ParameterGUI::draw(&m_proj3Green);
       ParameterGUI::draw(&m_proj3Blue);
 
-      ImGui::NewLine();
-
-      ParameterGUI::draw(&m_LEDSave);
       ImGui::Unindent();
     }
     ImGui::End();
@@ -230,7 +247,7 @@ class Multi350GUI {
     m_testStop.registerChangeCallback(
         [&](float value) { controller.stopTestPattern(); });
 
-    m_LEDApply.registerChangeCallback([&](float value) {
+    m_LEDapply.registerChangeCallback([&](float value) {
       std::vector<multi350::LEDCurrent> currents;
       currents.emplace_back(static_cast<uint8_t>(m_proj0Red.get()),
                             static_cast<uint8_t>(m_proj0Green.get()),
@@ -248,8 +265,13 @@ class Multi350GUI {
       controller.setLEDCurrent(currents);
     });
 
-    m_LEDSave.registerChangeCallback(
-        [&](float value) { m_presetCurrents.storePreset("currents"); });
+    m_LEDsave.registerChangeCallback([&](float value) {
+      m_presetCurrents.storePreset(m_LEDpresets[m_LEDpresetIdx]);
+    });
+
+    m_LEDload.registerChangeCallback([&](float value) {
+      m_presetCurrents.recallPresetSynchronous(m_LEDpresets[m_LEDpresetIdx]);
+    });
 
     m_varExpPatStart.registerChangeCallback([&](float value) {
       controller.startVarExpPatSequence(m_varExpPatSequences);
@@ -440,8 +462,11 @@ class Multi350GUI {
   Trigger m_patternStart{"pattern", "multi350"};
   Trigger m_patternStop{"stop", "multi350"};
 
-  Trigger m_LEDApply{"applyLED", "multi350"};
-  Trigger m_LEDSave{"saveLED", "multi350"};
+  Trigger m_LEDapply{"applyLED", "multi350"};
+  Trigger m_LEDsave{"saveLED", "multi350"};
+  Trigger m_LEDload{"loadLED", "multi350"};
+  std::map<int, std::string> m_LEDpresets;
+  int m_LEDpresetIdx{0};
 
   ParameterInt m_proj0Red{"proj0_red", "multi350", 40, 0, 255};
   ParameterInt m_proj0Green{"proj0_green", "multi350", 90, 0, 255};
