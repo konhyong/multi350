@@ -145,9 +145,15 @@ class Controller {
   /// @return True on success
   bool startVarExpPatSequence(VarExpPatSequence& varExpPatSequence);
 
-  /// @brief Stop pattern sequence on all controlled projectors.
+  /// @brief Stop pattern sequence on all controlled projectors
   /// @return True on success
   bool stopPatternSequence();
+
+  /// @brief Set gamma correction settings on all controlled projectors
+  /// @param degammaTable 0 = Enhanced, 1 = Max Brightness
+  /// @param enable 0 = Disable, no gamma correction
+  /// @return True on success
+  bool setGammaCorrection(const bool degammaTable, const bool enable);
 
   /// @brief Set LED currents on all controlled projectors
   /// @param currents std::vector containing LEDCurrent objects matching the
@@ -206,6 +212,12 @@ class Controller {
   /// @param psStatus PatternStatus object indicating start/stop
   /// @return True on success
   bool setPatternStatusSingle(const PatternStatus psStatus);
+
+  /// @brief Set gamma correction config for a single projector
+  /// @param degammaTable 0 = Enhanced, 1 = Max Brightness
+  /// @param enable 0 = Disable, no gamma correction
+  /// @return True on success
+  bool setGammaCorrectionSingle(const bool degammaTable, const bool enable);
 
  private:
   /// @brief Contains information of connected projectors and the corresponding

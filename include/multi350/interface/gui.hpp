@@ -164,6 +164,8 @@ class Multi350GUI {
     ImGui::NewLine();
 
     ParameterGUI::draw(&m_videoMode);
+    ImGui::SameLine();
+    ParameterGUI::draw(&m_gammaCorrection);
 
     ImGui::RadioButton("8b", &m_patternSequenceIndex, 0);
     ImGui::SameLine();
@@ -288,6 +290,10 @@ class Multi350GUI {
 
     m_videoMode.registerChangeCallback(
         [&](float value) { controller.startVideoMode(); });
+    
+    // TODO: add in option for degamma table selection
+    m_gammaCorrection.registerChangeCallback(
+        [&](float value) { controller.setGammaCorrection(0, value); });
 
     m_deviceClose.registerChangeCallback(
         [&](float value) { controller.close(); });
@@ -462,6 +468,8 @@ class Multi350GUI {
   Trigger m_varExpPatStart{"varExpPat", "multi350"};
   Trigger m_patternStart{"pattern", "multi350"};
   Trigger m_patternStop{"stop", "multi350"};
+
+  ParameterBool m_gammaCorrection{"gammaCorrection", "multi350", true};
 
   Trigger m_LEDapply{"applyLED", "multi350"};
   Trigger m_LEDsave{"saveLED", "multi350"};

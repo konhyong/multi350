@@ -339,6 +339,28 @@ bool Controller::stopPatternSequence()
   return true;
 }
 
+bool Controller::setGammaCorrection(const bool degammaTable, const bool enable)
+{
+  if (m_projectors.empty()) {
+    std::cout << "[Controller] No projectors connected" << std::endl;
+    return true;
+  }
+
+  for (auto& projector : m_projectors) {
+    if (projector.controlled) {
+      USB::select(projector.index);
+      if (!Controller::setGammaCorrectionSingle(degammaTable, enable)) {
+        std::cerr << "[Controller] Failed to set gamma correction"
+                  << std::endl;
+        return false;
+      }
+      projector.mainStatus.gammaCorrection = enable;
+    }
+  }
+  std::cout << "[Controller] Gamma Correction set: (" << degammaTable << ", " << enable << ")" << std::endl;
+  return true;
+}
+
 bool Controller::setLEDCurrent(const std::vector<LEDCurrent>& currents)
 {
   if (currents.size() != m_projectors.size()) {
@@ -583,20 +605,38 @@ bool Controller::validatePatternSequenceSingle()
 
 bool Controller::setPatternStatusSingle(const PatternStatus psStatus)
 {
-  multi350::setPatternStatus(psStatus);
-
   for (int i = 0; i < g_maxRetries; ++i) {
+    multi350::setPatternStatus(psStatus);
+
     std::this_thread::sleep_for(100ms);
 
     auto currentStatus = multi350::getPatternStatus();
     if (*currentStatus == psStatus) {
       return true;
     }
-    multi350::setPatternStatus(psStatus);
   }
 
   std::cerr
       << "[Controller] Exceeded max retries on Pattern Sequence start/stop"
+      << std::endl;
+  return false;
+}
+
+bool Controller::setGammaCorrectionSingle(const bool degammaTable, const bool enable)
+{
+  for (int i = 0; i < g_maxRetries; ++i) {
+    multi350::setGammaCorrection(degammaTable, enable);
+
+    std::this_thread::sleep_for(100ms);
+
+    auto currentGamma = multi350::getGammaCorrection();
+    if (currentGamma->degammaTable == degammaTable && currentGamma->enable == enable) {
+      return true;
+    }
+  }
+
+  std::cerr
+      << "[Controller] Exceeded max retries on Gamma Correction config"
       << std::endl;
   return false;
 }

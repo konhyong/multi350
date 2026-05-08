@@ -184,9 +184,9 @@ enum class DisplayMode : bool {
 union GammaCorrection {
   uint8_t value;
   struct {
-    bool degammaTable : 1;  // 0 = TI Video (Enhanced)
+    bool degammaTable : 1;  // 0 = Enhanced, 1 = Max Brightness
     uint8_t           : 6;
-    bool enable       : 1;
+    bool enable       : 1;  // 0 = Disable, no gamma correction
   };
   GammaCorrection() : value{0} {}
   GammaCorrection(const uint8_t _value) : value{_value} {}
