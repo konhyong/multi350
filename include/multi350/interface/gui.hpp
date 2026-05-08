@@ -164,6 +164,7 @@ class Multi350GUI {
     ImGui::NewLine();
 
     ParameterGUI::draw(&m_videoMode);
+    ParameterGUI::draw(&m_degammaTable);
     ImGui::SameLine();
     ParameterGUI::draw(&m_gammaCorrection);
 
@@ -290,10 +291,14 @@ class Multi350GUI {
 
     m_videoMode.registerChangeCallback(
         [&](float value) { controller.startVideoMode(); });
-    
-    // TODO: add in option for degamma table selection
-    m_gammaCorrection.registerChangeCallback(
-        [&](float value) { controller.setGammaCorrection(0, value); });
+
+    m_degammaTable.registerChangeCallback([&](float value) {
+      controller.setGammaCorrection(value, m_gammaCorrection.get());
+    });
+
+    m_gammaCorrection.registerChangeCallback([&](float value) {
+      controller.setGammaCorrection(m_degammaTable.get(), value);
+    });
 
     m_deviceClose.registerChangeCallback(
         [&](float value) { controller.close(); });
@@ -469,6 +474,7 @@ class Multi350GUI {
   Trigger m_patternStart{"pattern", "multi350"};
   Trigger m_patternStop{"stop", "multi350"};
 
+  ParameterBool m_degammaTable{"degammaTable", "multi350", false};
   ParameterBool m_gammaCorrection{"gammaCorrection", "multi350", true};
 
   Trigger m_LEDapply{"applyLED", "multi350"};
