@@ -143,7 +143,7 @@ std::unique_ptr<GammaCorrection> getGammaCorrection()
   return std::make_unique<GammaCorrection>(*result.get());
 }
 
-bool setGammaCorrection(const bool enable, const bool degammaTable)
+bool setGammaCorrection(const bool degammaTable, const bool enable)
 {
   auto result = sendSetMessage<uint8_t>(
       0x1A0E, GammaCorrection(degammaTable, enable).value);

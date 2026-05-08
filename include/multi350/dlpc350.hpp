@@ -325,7 +325,7 @@ bool setDisplayMode(const DisplayMode mode);
 /// @brief getGammaCorrection - CMD2 : 0x1A, CMD3 : 0x0E
 std::unique_ptr<GammaCorrection> getGammaCorrection();
 /// @brief setGammaCorrection - CMD2 : 0x1A, CMD3 : 0x0E, Param : 1
-bool setGammaCorrection(const bool enable, const bool degammaTable = false);
+bool setGammaCorrection(const bool degammaTable, const bool enable);
 
 /// @brief startPatternValidation - CMD2 : 0x1A, CMD3 : 0x1A, Param : 1 // dummy
 /// byte
