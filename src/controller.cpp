@@ -410,12 +410,8 @@ bool Controller::setLEDCurrent(const unsigned int index,
 
   m_projectors[index].ledCurrent = ledCurrent;
 
-  std::this_thread::sleep_for(200ms);
+  std::this_thread::sleep_for(100ms);
 
-  // temporary
-  auto result = multi350::getLEDPWMPolarity();
-  std::cout << "proj " << index << " PWM Polarity: " << result->polarity << std::endl;
-  // end temporary
   return true;
 }
 

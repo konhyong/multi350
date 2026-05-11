@@ -112,12 +112,14 @@ bool setLEDEnable(const LEDEnableMode mode, const bool redEnabled,
   return (result != nullptr);
 }
 
-std::unique_ptr<LEDPWMPolarity> getLEDPWMPolarity() {
+std::unique_ptr<LEDPWMPolarity> getLEDPWMPolarity()
+{
   auto result = sendGetMessage<LEDPWMPolarity>(0x1A05);
   return std::make_unique<LEDPWMPolarity>(*result.get());
 }
 
-bool setLEDPWMPolarity(const bool inverted) {
+bool setLEDPWMPolarity(const bool inverted)
+{
   auto result = sendSetMessage<uint8_t>(0x1A05, LEDPWMPolarity(inverted).value);
   return (result != nullptr);
 }
@@ -125,11 +127,20 @@ bool setLEDPWMPolarity(const bool inverted) {
 std::unique_ptr<LEDCurrent> getLEDCurrent()
 {
   auto result = sendGetMessage<uint32_t>(0x0B01);
-  return std::make_unique<LEDCurrent>(*result.get());
+  // need to be inverted due to implementation
+  // https://e2e.ti.com/support/dlp-products-group/dlp/f/dlp-products-forum/451589/led-polarity-discrepancy-between-manual-and-effective-behaviour
+  LEDCurrent currents{*result.get()};
+  currents.red = 255 - currents.red;
+  currents.green = 255 - currents.green;
+  currents.blue = 255 - currents.blue;
+
+  return std::make_unique<LEDCurrent>(currents);
 }
 
 bool setLEDCurrent(const uint8_t red, const uint8_t green, const uint8_t blue)
 {
+  // need to be inverted due to implementation
+  // https://e2e.ti.com/support/dlp-products-group/dlp/f/dlp-products-forum/451589/led-polarity-discrepancy-between-manual-and-effective-behaviour
   auto result = sendSetMessage<uint8_t, uint8_t, uint8_t>(
       0x0B01, 255 - red, 255 - green, 255 - blue);
   return (result != nullptr);
