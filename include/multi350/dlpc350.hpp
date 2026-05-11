@@ -158,6 +158,18 @@ union LEDEnable {
   }
 };
 
+/// @brief LED PWM Polarity
+union LEDPWMPolarity {
+  uint8_t value;
+  struct {
+    bool polarity : 2;  // 0 - normal (PWM 0 = no current), 1 - inverted
+    uint8_t       : 6;
+  };
+  LEDPWMPolarity() : value{0} {}
+  LEDPWMPolarity(const uint8_t _value) : value{_value} {}
+  LEDPWMPolarity(const bool _inverted) : polarity{_inverted} {}
+};
+
 /// @brief LED driver current control
 union LEDCurrent {
   uint32_t value;
@@ -309,6 +321,11 @@ std::unique_ptr<LEDEnable> getLEDEnable();
 bool setLEDEnable(const LEDEnableMode mode, const bool redEnabled = true,
                   const bool greenEnabled = true,
                   const bool blueEnabled = true);
+
+/// @brief getLEDPWMPolarity - CMD2 : 0x1A, CMD3 : 0x05
+std::unique_ptr<LEDPWMPolarity> getLEDPWMPolarity();
+/// @brief setLEDPWMPolarity - CMD2 : 0x1A, CMD3 : 0x07, Param : 1
+bool setLEDPWMPolarity(const bool inverted = false);
 
 /// @brief getLEDCurrent - CMD2 : 0x0B, CMD3 : 0x01
 std::unique_ptr<LEDCurrent> getLEDCurrent();

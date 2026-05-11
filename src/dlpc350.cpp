@@ -112,6 +112,16 @@ bool setLEDEnable(const LEDEnableMode mode, const bool redEnabled,
   return (result != nullptr);
 }
 
+std::unique_ptr<LEDPWMPolarity> getLEDPWMPolarity() {
+  auto result = sendGetMessage<LEDPWMPolarity>(0x1A05);
+  return std::make_unique<LEDPWMPolarity>(*result.get());
+}
+
+bool setLEDPWMPolarity(const bool inverted) {
+  auto result = sendSetMessage<uint8_t>(0x1A05, LEDPWMPolarity(inverted).value);
+  return (result != nullptr);
+}
+
 std::unique_ptr<LEDCurrent> getLEDCurrent()
 {
   auto result = sendGetMessage<uint32_t>(0x0B01);
