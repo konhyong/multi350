@@ -158,6 +158,18 @@ union LEDEnable {
   }
 };
 
+/// @brief LED PWM Polarity
+union LEDPWMPolarity {
+  uint8_t value;
+  struct {
+    bool polarity : 2;  // 0 - normal (PWM 0 = no current), 1 - inverted
+    uint8_t       : 6;
+  };
+  LEDPWMPolarity() : value{0} {}
+  LEDPWMPolarity(const uint8_t _value) : value{_value} {}
+  LEDPWMPolarity(const bool _inverted) : polarity{_inverted} {}
+};
+
 /// @brief LED driver current control
 union LEDCurrent {
   uint32_t value;
@@ -184,9 +196,9 @@ enum class DisplayMode : bool {
 union GammaCorrection {
   uint8_t value;
   struct {
-    bool degammaTable : 1;  // 0 = TI Video (Enhanced)
+    bool degammaTable : 1;  // 0 = Enhanced, 1 = Max Brightness
     uint8_t           : 6;
-    bool enable       : 1;
+    bool enable       : 1;  // 0 = Disable, no gamma correction
   };
   GammaCorrection() : value{0} {}
   GammaCorrection(const uint8_t _value) : value{_value} {}
@@ -310,6 +322,11 @@ bool setLEDEnable(const LEDEnableMode mode, const bool redEnabled = true,
                   const bool greenEnabled = true,
                   const bool blueEnabled = true);
 
+/// @brief getLEDPWMPolarity - CMD2 : 0x1A, CMD3 : 0x05
+std::unique_ptr<LEDPWMPolarity> getLEDPWMPolarity();
+/// @brief setLEDPWMPolarity - CMD2 : 0x1A, CMD3 : 0x07, Param : 1
+bool setLEDPWMPolarity(const bool inverted = false);
+
 /// @brief getLEDCurrent - CMD2 : 0x0B, CMD3 : 0x01
 std::unique_ptr<LEDCurrent> getLEDCurrent();
 /// @brief setLEDCurrent - CMD2 : 0x0B, CMD3 : 0x01, Param : 3
@@ -325,7 +342,7 @@ bool setDisplayMode(const DisplayMode mode);
 /// @brief getGammaCorrection - CMD2 : 0x1A, CMD3 : 0x0E
 std::unique_ptr<GammaCorrection> getGammaCorrection();
 /// @brief setGammaCorrection - CMD2 : 0x1A, CMD3 : 0x0E, Param : 1
-bool setGammaCorrection(const bool enable, const bool degammaTable = false);
+bool setGammaCorrection(const bool degammaTable, const bool enable);
 
 /// @brief startPatternValidation - CMD2 : 0x1A, CMD3 : 0x1A, Param : 1 // dummy
 /// byte
