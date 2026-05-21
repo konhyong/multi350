@@ -1,4 +1,5 @@
-// SPDX-FileCopyrightText: 2025 Kon Hyong Kim <konhyong@gmail.com>
+// SPDX-FileCopyrightText: 2015 Texas Instruments Incorporated
+// SPDX-FileCopyrightText: 2026 Kon Hyong Kim <konhyong@gmail.com>
 // SPDX-License-Identifier: BSD-3-Clause
 #include "multi350/controller.hpp"
 
@@ -350,14 +351,14 @@ bool Controller::setGammaCorrection(const bool degammaTable, const bool enable)
     if (projector.controlled) {
       USB::select(projector.index);
       if (!Controller::setGammaCorrectionSingle(degammaTable, enable)) {
-        std::cerr << "[Controller] Failed to set gamma correction"
-                  << std::endl;
+        std::cerr << "[Controller] Failed to set gamma correction" << std::endl;
         return false;
       }
       projector.mainStatus.gammaCorrection = enable;
     }
   }
-  std::cout << "[Controller] Gamma Correction set: (" << degammaTable << ", " << enable << ")" << std::endl;
+  std::cout << "[Controller] Gamma Correction set: (" << degammaTable << ", "
+            << enable << ")" << std::endl;
   return true;
 }
 
@@ -623,7 +624,8 @@ bool Controller::setPatternStatusSingle(const PatternStatus psStatus)
   return false;
 }
 
-bool Controller::setGammaCorrectionSingle(const bool degammaTable, const bool enable)
+bool Controller::setGammaCorrectionSingle(const bool degammaTable,
+                                          const bool enable)
 {
   for (int i = 0; i < g_maxRetries; ++i) {
     multi350::setGammaCorrection(degammaTable, enable);
@@ -631,14 +633,14 @@ bool Controller::setGammaCorrectionSingle(const bool degammaTable, const bool en
     std::this_thread::sleep_for(100ms);
 
     auto currentGamma = multi350::getGammaCorrection();
-    if (currentGamma->degammaTable == degammaTable && currentGamma->enable == enable) {
+    if (currentGamma->degammaTable == degammaTable &&
+        currentGamma->enable == enable) {
       return true;
     }
   }
 
-  std::cerr
-      << "[Controller] Exceeded max retries on Gamma Correction config"
-      << std::endl;
+  std::cerr << "[Controller] Exceeded max retries on Gamma Correction config"
+            << std::endl;
   return false;
 }
 };  // namespace multi350

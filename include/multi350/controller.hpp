@@ -1,4 +1,5 @@
-// SPDX-FileCopyrightText: 2025 Kon Hyong Kim <konhyong@gmail.com>
+// SPDX-FileCopyrightText: 2015 Texas Instruments Incorporated
+// SPDX-FileCopyrightText: 2026 Kon Hyong Kim <konhyong@gmail.com>
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 #include <vector>
@@ -81,7 +82,6 @@ class Controller {
   /// @return Reference to the Projector
   Projector& getProjector(const unsigned int index);
 
-  // TODO: change namespace for dlpc350 on cmake
   // TODO: adjust control flag check
 
   /// @brief Control all projectors

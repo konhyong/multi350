@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Kon Hyong Kim <konhyong@gmail.com>
+# SPDX-License-Identifier: BSD-3-Clause
 ### use hidapi submodule
 # build hidapi as static lib
 set(BUILD_SHARED_LIBS FALSE)
@@ -10,7 +12,7 @@ add_subdirectory(external/hidapi)
 # FetchContent_Declare(
 #   hidapi
 #   GIT_REPOSITORY https://github.com/libusb/hidapi.git
-#   GIT_TAG        hidapi-0.14.0
+#   GIT_TAG hidapi-0.14.0
 #   FIND_PACKAGE_ARGS
 # )
 # ### uncomment for static lib
@@ -25,7 +27,7 @@ add_subdirectory(external/hidapi)
 #   FetchContent_Declare(
 #     hidapi
 #     GIT_REPOSITORY https://github.com/libusb/hidapi.git
-#     GIT_TAG        hidapi-0.14.0
+#     GIT_TAG hidapi-0.14.0
 #   )
 #   option(BUILD_SHARED_LIBS "" OFF)
 #   FetchContent_MakeAvailable(hidapi)

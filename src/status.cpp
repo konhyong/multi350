@@ -1,4 +1,5 @@
-// SPDX-FileCopyrightText: 2025 Kon Hyong Kim <konhyong@gmail.com>
+// SPDX-FileCopyrightText: 2015 Texas Instruments Incorporated
+// SPDX-FileCopyrightText: 2026 Kon Hyong Kim <konhyong@gmail.com>
 // SPDX-License-Identifier: BSD-3-Clause
 #include "multi350/status.hpp"
 
