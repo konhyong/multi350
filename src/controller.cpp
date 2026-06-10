@@ -8,8 +8,6 @@
 #include <iostream>
 #include <thread>
 
-using namespace std::chrono_literals;
-
 namespace multi350 {
 
 bool Controller::open()
@@ -144,6 +142,8 @@ void Controller::updateStatus()
 
 bool Controller::setPowerMode(const PowerMode powerMode)
 {
+  using namespace std::chrono_literals;
+
   if (m_projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
     return true;
@@ -172,6 +172,8 @@ bool Controller::setPowerMode(const PowerMode powerMode)
 bool Controller::setPowerMode(const unsigned int index,
                               const PowerMode powerMode)
 {
+  using namespace std::chrono_literals;
+
   if (m_projectors.empty()) {
     std::cout << "[Controller] No projectors connected" << std::endl;
     return true;
@@ -385,6 +387,8 @@ bool Controller::setLEDCurrent(const std::vector<LEDCurrent>& currents)
 bool Controller::setLEDCurrent(const unsigned int index,
                                const LEDCurrent ledCurrent)
 {
+  using namespace std::chrono_literals;
+
   assert(ledCurrent.red >= 0);
   assert(ledCurrent.red <= 255);
   assert(ledCurrent.green >= 0);
@@ -463,6 +467,8 @@ void Controller::printStatus()
 
 bool Controller::setDisplayModeSingle(const DisplayMode displayMode)
 {
+  using namespace std::chrono_literals;
+
   auto currentDisplayMode = multi350::getDisplayMode();
 
   // If device is already in pattern mode, stop sequence
@@ -576,6 +582,8 @@ bool Controller::startVarExpPatSequenceSingle(
 
 bool Controller::validatePatternSequenceSingle()
 {
+  using namespace std::chrono_literals;
+
   Controller::setPatternStatusSingle(PatternStatus::STOP);
 
   multi350::startPatternValidation();
@@ -607,6 +615,8 @@ bool Controller::validatePatternSequenceSingle()
 
 bool Controller::setPatternStatusSingle(const PatternStatus psStatus)
 {
+  using namespace std::chrono_literals;
+
   for (int i = 0; i < g_maxRetries; ++i) {
     multi350::setPatternStatus(psStatus);
 
@@ -627,6 +637,8 @@ bool Controller::setPatternStatusSingle(const PatternStatus psStatus)
 bool Controller::setGammaCorrectionSingle(const bool degammaTable,
                                           const bool enable)
 {
+  using namespace std::chrono_literals;
+  
   for (int i = 0; i < g_maxRetries; ++i) {
     multi350::setGammaCorrection(degammaTable, enable);
 
